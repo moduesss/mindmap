@@ -26,6 +26,9 @@ import { getId } from "./utils";
 
 import "@xyflow/react/dist/style.css";
 
+import MindmapNode from "./MindmapNode";
+import useMindmapCollapse from "./useMindmapCollapse";
+
 const proOptions = {
   hideAttribution: true,
 };
@@ -40,74 +43,38 @@ const defaultEdgeOptions = {
  * This example shows how you can automatically arrange your nodes after adding child nodes to your graph.
  */
 function ReactFlowAutoLayout() {
-  const { fitView, addNodes } = useReactFlow();
+  const { fitView } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // 👇 This hook is used to display a leva (https://github.com/pmndrs/leva) control panel for this example.
-  // You can safely remove it, if you don't want to use it.
-  const layoutOptions = useControls({
-    algorithm: {
-      value: "dagre" as LayoutOptions["algorithm"],
-      options: ["dagre", "d3-hierarchy", "elk"] as LayoutOptions["algorithm"][],
-    },
-    direction: {
-      value: "LR" as LayoutOptions["direction"], // Изменено с 'TB' на 'LR'
-      options: {
-        down: "TB",
-        right: "LR",
-        up: "BT",
-        left: "RL",
-      } as Record<string, LayoutOptions["direction"]>,
-    },
-    spacing: [50, 50],
-    "add root node": button(() =>
-      addNodes({
-        id: getId(),
-        position: { x: 0, y: 0 },
-        data: { label: `New Node` },
-        style: { opacity: 0 },
-      })
-    ),
-  });
-
-  // this hook handles the computation of the layout once the elements or the direction changes
-  useAutoLayout(layoutOptions);
-
-  // this helper function adds a new node and connects it to the source node
-  const addChildNode = useCallback(
-    (parentNodeId: string) => {
-      // create an incremental ID based on the number of elements already in the graph
-      const childNodeId = getId();
-
-      const childNode: Node = {
-        id: childNodeId,
-        data: { label: `Node ${nodes.length + 1}` },
-        position: { x: 0, y: 0 }, // no need to pass a position as it is computed by the layout hook
-        style: { opacity: 0 },
-      };
-
-      const connectingEdge: Edge = {
-        id: `${parentNodeId}->${childNodeId}`,
-        source: parentNodeId,
-        target: childNodeId,
-        style: { opacity: 0 },
-      };
-
-      setNodes((nodes) => nodes.concat([childNode]));
-      setEdges((edges) => edges.concat([connectingEdge]));
-    },
-    [setNodes, setEdges, nodes.length]
+  // Заменить useAutoLayout на useMindmapCollapse
+  const { nodes: visibleNodes, edges: visibleEdges } = useMindmapCollapse(
+    nodes,
+    edges,
+    { direction: "LR", spacing: [350, 120] } // больше расстояния
   );
 
-  // this function is called when a node in the graph is clicked
+  // Заменить onNodeClick на expand/collapse функциональность
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
-      // on click, we want to create a new node connecting the clicked node
-      addChildNode(node.id);
+      // Переключаем expanded состояние узла
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id === node.id) {
+            return {
+              ...n,
+              data: { ...n.data, expanded: !n.data.expanded },
+            };
+          }
+          return n;
+        })
+      );
+
+      // Центрируем view после изменения
+      setTimeout(() => fitView({ duration: 300 }), 50);
     },
-    [addChildNode]
+    [setNodes, fitView]
   );
 
   const onConnect: OnConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), [setEdges]);
@@ -117,19 +84,24 @@ function ReactFlowAutoLayout() {
     fitView();
   }, [nodes, fitView]);
 
+  const nodeTypes = {
+    mindmap: MindmapNode,
+  };
+
   return (
     <ReactFlow
-      nodes={nodes}
-      edges={edges}
+      nodes={visibleNodes}
+      edges={visibleEdges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
       onNodeClick={onNodeClick}
+      nodeTypes={nodeTypes}
       nodesDraggable={false}
+      nodesConnectable={false}
+      zoomOnDoubleClick={false}
       defaultEdgeOptions={defaultEdgeOptions}
       connectionLineType={ConnectionLineType.SmoothStep}
       proOptions={proOptions}
-      zoomOnDoubleClick={false}
     />
   );
 }
