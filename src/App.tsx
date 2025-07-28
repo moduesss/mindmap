@@ -33,7 +33,7 @@ function ReactFlowAutoLayout() {
   // Используем обновленный хук с анимациями
   const { nodes: visibleNodes, edges: visibleEdges } = useMindmapCollapse(nodes, edges, {
     direction: "LR",
-    spacing: [250, 80],
+    spacing: [200, 30],
   });
 
   // Обработчик клика для expand/collapse

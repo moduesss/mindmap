@@ -9,20 +9,27 @@ body,
   margin: 0;
 }
 
-/* Стили для mindmap узлов из dynamic-layouting */
+/* Стили для mindmap узлов */
 .react-flow__handle {
   visibility: hidden;
 }
 
+/* Переопределяем стили для mindmap узлов */
 .react-flow__node-mindmap {
   width: 200px;
   height: 50px;
-  padding: 0;
-  background: #fff;
-  border: 1px solid #4ecdc4;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  padding: 0 !important; /* Убираем padding */
+  border: none !important; /* Убираем border */
+  background-color: transparent !important; /* Убираем background */
+  box-shadow: none !important; /* Убираем box-shadow */
+  border-radius: 0 !important; /* Убираем border-radius */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  font-size: 12px !important;
+  flex-direction: column !important;
+  color: inherit !important;
 }
 
 .react-flow__node-mindmap:hover {
@@ -39,16 +46,16 @@ body,
   padding: 0 12px;
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  border-radius: 8px;
+  border: 2px solid;
 }
 
 .mindmap-expand-button {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid #4ecdc4;
-  background: white;
-  color: #4ecdc4;
+  border: 1px solid;
+  background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -60,8 +67,8 @@ body,
 }
 
 .mindmap-expand-button:hover {
-  background: #4ecdc4;
-  color: white;
+  background: currentColor;
+  color: white !important;
 }
 
 .mindmap-node-content {

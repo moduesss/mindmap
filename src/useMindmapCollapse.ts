@@ -1,6 +1,9 @@
 import { useMemo, useEffect, useState, useRef } from "react";
 import { Node, Edge, useReactFlow } from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
+import { Position } from "@xyflow/react";
+import { Direction } from "./algorithms";
+import { getNodeLevel } from "./utils"; // Добавляем импорт
 
 export type UseMindmapCollapseOptions = {
   direction?: "TB" | "LR" | "BT" | "RL";
@@ -82,7 +85,10 @@ function useMindmapCollapse(
         y: y + rootOffset.y - 25,
       };
 
-      const data = { ...node.data };
+      const data = {
+        ...node.data,
+        level: getNodeLevel(node.id, nodes, edges), // Добавляем уровень
+      };
       return [{ ...node, position, data }];
     });
   }, [nodes, edges, direction, spacing]);
@@ -201,7 +207,25 @@ function useMindmapCollapse(
         },
       }));
 
+      // Создаем анимированные рёбра, которые следуют за анимированными позициями узлов
+      const animatedEdges = finalEdges
+        .filter((edge) => currNodes.some((n) => n.id === edge.source) && currNodes.some((n) => n.id === edge.target))
+        .map((edge) => {
+          const sourceNode = currNodes.find((n) => n.id === edge.source);
+          const targetNode = currNodes.find((n) => n.id === edge.target);
+
+          if (sourceNode && targetNode) {
+            return {
+              ...edge,
+              source: sourceNode.id,
+              target: targetNode.id,
+            };
+          }
+          return edge;
+        });
+
       setAnimatedNodes(currNodes);
+      setAnimatedEdges(animatedEdges);
 
       if (progress < 1) {
         requestAnimationFrame(animate);
@@ -209,7 +233,7 @@ function useMindmapCollapse(
         setAnimatedNodes(finalNodes);
         setAnimatedEdges(
           finalEdges.filter(
-            (edge) => finalNodes.some((n) => n.id === edge.source) && finalNodes.some((n) => n.id === edge.target)
+            (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
           )
         );
       }
@@ -260,7 +284,25 @@ function useMindmapCollapse(
         };
       });
 
+      // Создаем анимированные рёбра, которые следуют за анимированными позициями узлов
+      const animatedEdges = allEdges
+        .filter((edge) => currNodes.some((n) => n.id === edge.source) && currNodes.some((n) => n.id === edge.target))
+        .map((edge) => {
+          const sourceNode = currNodes.find((n) => n.id === edge.source);
+          const targetNode = currNodes.find((n) => n.id === edge.target);
+
+          if (sourceNode && targetNode) {
+            return {
+              ...edge,
+              source: sourceNode.id,
+              target: targetNode.id,
+            };
+          }
+          return edge;
+        });
+
       setAnimatedNodes(currNodes);
+      setAnimatedEdges(animatedEdges);
 
       if (progress < 1) {
         requestAnimationFrame(animate);
@@ -274,7 +316,7 @@ function useMindmapCollapse(
         );
         setAnimatedEdges(
           allEdges.filter(
-            (edge) => finalNodes.some((n) => n.id === edge.source) && finalNodes.some((n) => n.id === edge.target)
+            (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
           )
         );
         setIsAnimating(false);

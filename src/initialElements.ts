@@ -12,16 +12,17 @@ function shouldBeExpanded(nodeId: string): boolean {
 // Конвертируем данные из mindmap-data.js в формат React Flow с expand/collapse
 export const nodes: Node[] = MINDMAP_DATA.nodes.map((node: any) => ({
   id: node.id,
-  type: "mindmap", // используем кастомный тип узла
+  type: "mindmap",
   data: {
     ...node.data,
     expanded: shouldBeExpanded(node.id),
     expandable: false, // будет установлено в useMindmapCollapse
+    level: 0, // будет вычислено в useMindmapCollapse
   },
-  position: { x: 0, y: 0 }, // позиции будут вычислены автоматически
+  position: { x: 0, y: 0 },
   style: {
     ...node.style,
-    opacity: 1, // начальная прозрачность
+    opacity: 1,
   },
 }));
 
