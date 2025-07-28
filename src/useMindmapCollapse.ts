@@ -1,6 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
 import { Node, Edge, useReactFlow } from "@xyflow/react";
-import { timer } from "d3-timer";
 import Dagre from "@dagrejs/dagre";
 
 export type UseMindmapCollapseOptions = {
@@ -27,7 +26,7 @@ function filterCollapsedChildren(dagre: Dagre.graphlib.Graph, node: Node) {
 function useMindmapCollapse(
   nodes: Node[],
   edges: Edge[],
-  { direction = "LR", spacing = [280, 100] }: UseMindmapCollapseOptions = {}
+  { direction = "LR", spacing = [250, 80] }: UseMindmapCollapseOptions = {}
 ): { nodes: Node[]; edges: Edge[] } {
   const { getNode, fitView } = useReactFlow();
   const [animatedNodes, setAnimatedNodes] = useState<Node[]>([]);
@@ -40,6 +39,8 @@ function useMindmapCollapse(
         rankdir: direction,
         nodesep: spacing[1],
         ranksep: spacing[0],
+        marginx: 20,
+        marginy: 20,
       });
 
     // Добавляем узлы в граф
@@ -64,13 +65,27 @@ function useMindmapCollapse(
     // Запускаем layout
     Dagre.layout(dagre);
 
+    // Находим корневой узел для стабилизации позиции
+    const rootNode = nodes.find((n) => n.id === "root");
+    let rootOffset = { x: 0, y: 0 };
+
+    if (rootNode && dagre.hasNode("root")) {
+      const rootDagrePos = dagre.node("root");
+      rootOffset = {
+        x: -rootDagrePos.x,
+        y: -rootDagrePos.y,
+      };
+    }
+
     return nodes.flatMap((node) => {
       if (!dagre.hasNode(node.id)) return [];
 
       const { x, y } = dagre.node(node.id);
+
+      // Применяем смещение относительно корня + центрирование узла
       const position = {
-        x: x - 100,
-        y: y - 25,
+        x: x + rootOffset.x - 100, // центрируем узел (200/2)
+        y: y + rootOffset.y - 25, // центрируем узел (50/2)
       };
 
       const data = { ...node.data };
@@ -85,36 +100,79 @@ function useMindmapCollapse(
       return;
     }
 
-    const transitions = targetNodes.map((node) => ({
-      id: node.id,
-      from: getNode(node.id)?.position ?? node.position,
-      to: node.position,
-      node,
-    }));
+    // Создаем карту родителей для определения откуда анимировать новые узлы
+    const parentMap = new Map<string, string>();
+    edges.forEach((edge) => {
+      parentMap.set(edge.target, edge.source);
+    });
 
-    const t = timer((elapsed) => {
-      const s = Math.min(elapsed / 400, 1);
-      const easeOut = 1 - Math.pow(1 - s, 3);
+    const transitions = targetNodes.map((node) => {
+      const existingNode = getNode(node.id);
 
-      const currNodes = transitions.map(({ node, from, to }) => ({
+      let fromPosition;
+      if (existingNode) {
+        // Существующий узел - анимируем от текущей позиции
+        fromPosition = existingNode.position;
+      } else {
+        // Новый узел - анимируем от позиции родителя
+        const parentId = parentMap.get(node.id);
+        const parentNode = parentId ? getNode(parentId) : null;
+        fromPosition = parentNode ? parentNode.position : node.position;
+      }
+
+      return {
+        id: node.id,
+        from: fromPosition,
+        to: node.position,
+        node: {
+          ...node,
+          style: {
+            ...node.style,
+            opacity: existingNode ? 1 : 0, // Новые узлы начинают с прозрачности 0
+          },
+        },
+        isNew: !existingNode,
+      };
+    });
+
+    const duration = 400;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out функция
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      const currNodes = transitions.map(({ node, from, to, isNew }) => ({
         ...node,
         position: {
           x: from.x + (to.x - from.x) * easeOut,
           y: from.y + (to.y - from.y) * easeOut,
         },
+        style: {
+          ...node.style,
+          opacity: isNew ? easeOut : 1, // Анимируем прозрачность для новых узлов
+        },
       }));
 
       setAnimatedNodes(currNodes);
 
-      if (elapsed >= 400) {
-        setAnimatedNodes(targetNodes);
-        t.stop();
-        setTimeout(() => fitView({ duration: 300, padding: 0.1 }), 50);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Финальное состояние - убираем style чтобы не перебивать CSS
+        const finalNodes = targetNodes.map((node) => ({
+          ...node,
+          style: { ...node.style, opacity: 1 },
+        }));
+        setAnimatedNodes(finalNodes);
       }
-    });
+    };
 
-    return () => t.stop();
-  }, [targetNodes, getNode, fitView]);
+    requestAnimationFrame(animate);
+  }, [targetNodes, getNode, edges]);
 
   return {
     nodes: animatedNodes.length > 0 ? animatedNodes : targetNodes,

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -25,13 +25,15 @@ const nodeTypes = {
 };
 
 function ReactFlowAutoLayout() {
+  const { fitView } = useReactFlow();
+
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   // Используем обновленный хук с анимациями
   const { nodes: visibleNodes, edges: visibleEdges } = useMindmapCollapse(nodes, edges, {
     direction: "LR",
-    spacing: [280, 100],
+    spacing: [250, 80],
   });
 
   // Обработчик клика для expand/collapse
@@ -52,6 +54,13 @@ function ReactFlowAutoLayout() {
     [setNodes]
   );
 
+  // Центрируем только при первой загрузке
+  useEffect(() => {
+    if (visibleNodes.length > 0) {
+      fitView({ duration: 500, padding: 0.1 });
+    }
+  }, []); // Пустой массив зависимостей - только при монтировании
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <ReactFlow
@@ -65,7 +74,6 @@ function ReactFlowAutoLayout() {
         nodesConnectable={false}
         elementsSelectable={false}
         zoomOnDoubleClick={false}
-        fitView
         proOptions={proOptions}
       >
         <Background />

@@ -16,10 +16,13 @@ export const nodes: Node[] = MINDMAP_DATA.nodes.map((node: any) => ({
   data: {
     ...node.data,
     expanded: shouldBeExpanded(node.id),
-    expandable: false, // будет установлено в useExpandCollapse
+    expandable: false, // будет установлено в useMindmapCollapse
   },
   position: { x: 0, y: 0 }, // позиции будут вычислены автоматически
-  style: node.style || {},
+  style: {
+    ...node.style,
+    opacity: 1, // начальная прозрачность
+  },
 }));
 
 export const edges: Edge[] = MINDMAP_DATA.edges.map((edge: any) => ({
