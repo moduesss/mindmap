@@ -1,5 +1,6 @@
-import { useMemo } from "react";
-import { Node, Edge } from "@xyflow/react";
+import { useMemo, useEffect, useState } from "react";
+import { Node, Edge, useReactFlow } from "@xyflow/react";
+import { timer } from "d3-timer";
 import Dagre from "@dagrejs/dagre";
 
 export type UseMindmapCollapseOptions = {
@@ -26,22 +27,26 @@ function filterCollapsedChildren(dagre: Dagre.graphlib.Graph, node: Node) {
 function useMindmapCollapse(
   nodes: Node[],
   edges: Edge[],
-  { direction = "LR", spacing = [300, 100] }: UseMindmapCollapseOptions = {} // Увеличил spacing
+  { direction = "LR", spacing = [280, 100] }: UseMindmapCollapseOptions = {}
 ): { nodes: Node[]; edges: Edge[] } {
-  return useMemo(() => {
+  const { getNode, fitView } = useReactFlow();
+  const [animatedNodes, setAnimatedNodes] = useState<Node[]>([]);
+
+  // Вычисляем целевые позиции
+  const targetNodes = useMemo(() => {
     const dagre = new Dagre.graphlib.Graph()
       .setDefaultEdgeLabel(() => ({}))
       .setGraph({
         rankdir: direction,
-        nodesep: spacing[1], // вертикальное расстояние между узлами
-        ranksep: spacing[0], // горизонтальное расстояние между уровнями
+        nodesep: spacing[1],
+        ranksep: spacing[0],
       });
 
     // Добавляем узлы в граф
     for (const node of nodes) {
       dagre.setNode(node.id, {
-        width: 250, // увеличил ширину
-        height: 80, // увеличил высоту
+        width: 200,
+        height: 50,
         data: node.data,
       });
     }
@@ -59,22 +64,64 @@ function useMindmapCollapse(
     // Запускаем layout
     Dagre.layout(dagre);
 
-    return {
-      nodes: nodes.flatMap((node) => {
-        if (!dagre.hasNode(node.id)) return [];
+    return nodes.flatMap((node) => {
+      if (!dagre.hasNode(node.id)) return [];
 
-        const { x, y } = dagre.node(node.id);
-        const position = {
-          x: x - 125, // центрируем по новой ширине (250/2)
-          y: y - 40, // центрируем по новой высоте (80/2)
-        };
+      const { x, y } = dagre.node(node.id);
+      const position = {
+        x: x - 100,
+        y: y - 25,
+      };
 
-        const data = { ...node.data };
-        return [{ ...node, position, data }];
-      }),
-      edges: edges.filter((edge) => dagre.hasNode(edge.source) && dagre.hasNode(edge.target)),
-    };
+      const data = { ...node.data };
+      return [{ ...node, position, data }];
+    });
   }, [nodes, edges, direction, spacing]);
+
+  // Анимация к целевым позициям
+  useEffect(() => {
+    if (targetNodes.length === 0) {
+      setAnimatedNodes([]);
+      return;
+    }
+
+    const transitions = targetNodes.map((node) => ({
+      id: node.id,
+      from: getNode(node.id)?.position ?? node.position,
+      to: node.position,
+      node,
+    }));
+
+    const t = timer((elapsed) => {
+      const s = Math.min(elapsed / 400, 1);
+      const easeOut = 1 - Math.pow(1 - s, 3);
+
+      const currNodes = transitions.map(({ node, from, to }) => ({
+        ...node,
+        position: {
+          x: from.x + (to.x - from.x) * easeOut,
+          y: from.y + (to.y - from.y) * easeOut,
+        },
+      }));
+
+      setAnimatedNodes(currNodes);
+
+      if (elapsed >= 400) {
+        setAnimatedNodes(targetNodes);
+        t.stop();
+        setTimeout(() => fitView({ duration: 300, padding: 0.1 }), 50);
+      }
+    });
+
+    return () => t.stop();
+  }, [targetNodes, getNode, fitView]);
+
+  return {
+    nodes: animatedNodes.length > 0 ? animatedNodes : targetNodes,
+    edges: edges.filter(
+      (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
+    ),
+  };
 }
 
 export default useMindmapCollapse;
