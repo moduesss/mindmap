@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from "react";
 
 import {
   ReactFlow,
@@ -13,28 +13,25 @@ import {
   OnConnect,
   addEdge,
   ConnectionLineType,
-} from '@xyflow/react';
+} from "@xyflow/react";
 
 // This is used to display a leva (https://github.com/pmndrs/leva) control panel for the example
-import { useControls, button } from 'leva';
+import { useControls, button } from "leva";
 
-import useAutoLayout, { type LayoutOptions } from './useAutoLayout';
+import useAutoLayout, { type LayoutOptions } from "./useAutoLayout";
 
-import {
-  nodes as initialNodes,
-  edges as initialEdges,
-} from './initialElements';
+import { nodes as initialNodes, edges as initialEdges } from "./initialElements";
 
-import { getId } from './utils';
+import { getId } from "./utils";
 
-import '@xyflow/react/dist/style.css';
+import "@xyflow/react/dist/style.css";
 
 const proOptions = {
   hideAttribution: true,
 };
 
 const defaultEdgeOptions = {
-  type: 'smoothstep',
+  type: "smoothstep",
   markerEnd: { type: MarkerType.ArrowClosed },
   pathOptions: { offset: 5 },
 };
@@ -52,20 +49,20 @@ function ReactFlowAutoLayout() {
   // You can safely remove it, if you don't want to use it.
   const layoutOptions = useControls({
     algorithm: {
-      value: 'dagre' as LayoutOptions['algorithm'],
-      options: ['dagre', 'd3-hierarchy', 'elk'] as LayoutOptions['algorithm'][],
+      value: "dagre" as LayoutOptions["algorithm"],
+      options: ["dagre", "d3-hierarchy", "elk"] as LayoutOptions["algorithm"][],
     },
     direction: {
-      value: 'TB' as LayoutOptions['direction'],
+      value: "LR" as LayoutOptions["direction"], // Изменено с 'TB' на 'LR'
       options: {
-        down: 'TB',
-        right: 'LR',
-        up: 'BT',
-        left: 'RL',
-      } as Record<string, LayoutOptions['direction']>,
+        down: "TB",
+        right: "LR",
+        up: "BT",
+        left: "RL",
+      } as Record<string, LayoutOptions["direction"]>,
     },
     spacing: [50, 50],
-    'add root node': button(() =>
+    "add root node": button(() =>
       addNodes({
         id: getId(),
         position: { x: 0, y: 0 },
@@ -113,10 +110,7 @@ function ReactFlowAutoLayout() {
     [addChildNode]
   );
 
-  const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges]
-  );
+  const onConnect: OnConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), [setEdges]);
 
   // every time our nodes change, we want to center the graph again
   useEffect(() => {

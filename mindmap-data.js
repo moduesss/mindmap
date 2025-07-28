@@ -5,186 +5,154 @@ export const MINDMAP_DATA = {
       id: "root",
       type: "input",
       data: { label: "Реконструкция Люберецкие очистные сооружения. 3 этап" },
-      style: { background: "#fff", color: "white", fontWeight: "bold", width: 300 },
     },
 
     // Level 1 nodes
     {
       id: "project-participants",
       data: { label: "Проект и участники" },
-      style: { background: "#4ecdc4", color: "white", width: 200 },
     },
     {
       id: "technical-solutions",
       data: { label: "Технические решения" },
-      style: { background: "#4ecdc4", color: "white", width: 200 },
     },
     {
       id: "calendar-plan",
       data: { label: "Календарный план" },
-      style: { background: "#4ecdc4", color: "white", width: 200 },
     },
 
     // Level 2 nodes - Project and Participants
     {
       id: "project",
       data: { label: "Проект" },
-      style: { background: "#45b7d1", color: "white", width: 150 },
     },
     {
       id: "participants",
       data: { label: "Участники" },
-      style: { background: "#45b7d1", color: "white", width: 150 },
     },
 
     // Level 2 nodes - Technical Solutions
     {
       id: "tech-lines",
       data: { label: "Технологические линии" },
-      style: { background: "#45b7d1", color: "white", width: 180 },
     },
     {
       id: "equipment",
       data: { label: "Оборудование" },
-      style: { background: "#45b7d1", color: "white", width: 150 },
     },
 
     // Level 3 nodes - Project details
     {
       id: "project-name",
       data: { label: "Наименование: Реконструкция ЛОС" },
-      style: { background: "#96ceb4", color: "white", width: 200 },
     },
     {
       id: "project-codes",
       data: { label: "Шифры" },
-      style: { background: "#96ceb4", color: "white", width: 120 },
     },
     {
       id: "project-stage",
       data: { label: "Стадия проектирования" },
-      style: { background: "#96ceb4", color: "white", width: 160 },
     },
     {
       id: "customer",
       data: { label: "Заказчик: ГУП МосводоканалНИИпроект" },
-      style: { background: "#96ceb4", color: "white", width: 250 },
     },
 
     // Level 3 nodes - Participants
     {
       id: "designer",
       data: { label: "Проектировщик" },
-      style: { background: "#96ceb4", color: "white", width: 140 },
     },
     {
       id: "contractor",
       data: { label: "Подрядчик" },
-      style: { background: "#96ceb4", color: "white", width: 120 },
     },
 
     // Level 3 nodes - Technical Lines
     {
       id: "wastewater-line",
       data: { label: "Линия очистки сточных вод" },
-      style: { background: "#96ceb4", color: "white", width: 180 },
     },
     {
       id: "sludge-line",
       data: { label: "Линия обработки осадка" },
-      style: { background: "#96ceb4", color: "white", width: 170 },
     },
     {
       id: "automation-system",
       data: { label: "Система автоматизации" },
-      style: { background: "#96ceb4", color: "white", width: 160 },
     },
 
     // Level 3 nodes - Equipment
     {
       id: "pump-equipment",
       data: { label: "Насосное оборудование" },
-      style: { background: "#96ceb4", color: "white", width: 160 },
     },
     {
       id: "aeration-equipment",
       data: { label: "Аэрационное оборудование" },
-      style: { background: "#96ceb4", color: "white", width: 170 },
     },
     {
       id: "control-systems",
       data: { label: "Системы КИП и А" },
-      style: { background: "#96ceb4", color: "white", width: 140 },
     },
 
     // Level 2 nodes - Calendar Plan
     {
       id: "stage-1",
       data: { label: "Этап 1: Подготовительные работы" },
-      style: { background: "#45b7d1", color: "white", width: 200 },
     },
     {
       id: "stage-2",
       data: { label: "Этап 2: Основные работы" },
-      style: { background: "#45b7d1", color: "white", width: 180 },
     },
     {
       id: "stage-3",
       data: { label: "Этап 3: Пуско-наладочные работы" },
-      style: { background: "#45b7d1", color: "white", width: 200 },
     },
 
     // Level 4 nodes - Project codes details
     {
       id: "code-1",
       data: { label: "14414‑П‑ЛОС‑20‑КР8" },
-      style: { background: "#feca57", color: "white", width: 150 },
     },
     {
       id: "code-2",
       data: { label: "14414‑П‑ЛОС‑20‑КР6" },
-      style: { background: "#feca57", color: "white", width: 150 },
     },
     {
       id: "code-3",
       data: { label: "14414‑П‑ЛОС‑20‑КР5" },
-      style: { background: "#feca57", color: "white", width: 150 },
     },
 
     // Level 4 nodes - Project stage details
     {
       id: "working-docs",
       data: { label: "Рабочая документация" },
-      style: { background: "#feca57", color: "white", width: 160 },
     },
     {
       id: "project-docs",
       data: { label: "Проектная документация" },
-      style: { background: "#feca57", color: "white", width: 170 },
     },
 
     // Level 4 nodes - Designer details
     {
       id: "design-company",
       data: { label: 'ООО "ГидроИнжПроект"' },
-      style: { background: "#feca57", color: "white", width: 160 },
     },
     {
       id: "chief-engineer",
       data: { label: "Главный инженер проекта" },
-      style: { background: "#feca57", color: "white", width: 170 },
     },
 
     // Level 4 nodes - Contractor details
     {
       id: "contractor-company",
       data: { label: 'ООО "СтройТехнологии"' },
-      style: { background: "#feca57", color: "white", width: 160 },
     },
     {
       id: "foreman",
       data: { label: "Прораб объекта" },
-      style: { background: "#feca57", color: "white", width: 130 },
     },
   ],
 
@@ -252,180 +220,3 @@ export const MINDMAP_DATA = {
     totalEdges: 30,
   },
 };
-
-// Для обратной совместимости - экспорт в старом древовидном формате
-export const TREE = {
-  title: "Реконструкция Люберецкие очистные сооружения. 3 этап",
-  children: [
-    {
-      title: "Проект и участники",
-      children: [
-        {
-          title: "Проект",
-          children: [
-            { title: "Наименование: Реконструкция ЛОС" },
-            {
-              title: "Шифры",
-              children: [
-                { title: "14414‑П‑ЛОС‑20‑КР8" },
-                { title: "14414‑П‑ЛОС‑20‑КР6" },
-                { title: "14414‑П‑ЛОС‑20‑КР5" },
-              ],
-            },
-            {
-              title: "Стадия проектирования",
-              children: [{ title: "Рабочая документация" }, { title: "Проектная документация" }],
-            },
-            { title: "Заказчик: ГУП МосводоканалНИИпроект" },
-          ],
-        },
-        {
-          title: "Участники",
-          children: [
-            {
-              title: "Проектировщик",
-              children: [{ title: 'ООО "ГидроИнжПроект"' }, { title: "Главный инженер проекта" }],
-            },
-            { title: "Подрядчик", children: [{ title: 'ООО "СтройТехнологии"' }, { title: "Прораб объекта" }] },
-          ],
-        },
-      ],
-    },
-    {
-      title: "Технические решения",
-      children: [
-        {
-          title: "Технологические линии",
-          children: [
-            { title: "Линия очистки сточных вод" },
-            { title: "Линия обработки осадка" },
-            { title: "Система автоматизации" },
-          ],
-        },
-        {
-          title: "Оборудование",
-          children: [
-            { title: "Насосное оборудование" },
-            { title: "Аэрационное оборудование" },
-            { title: "Системы КИП и А" },
-          ],
-        },
-      ],
-    },
-    {
-      title: "Календарный план",
-      children: [
-        { title: "Этап 1: Подготовительные работы" },
-        { title: "Этап 2: Основные работы" },
-        { title: "Этап 3: Пуско-наладочные работы" },
-      ],
-    },
-  ],
-};
-
-// Утилиты для работы с динамическим раскрытием
-export class MindmapNavigator {
-  constructor(mindmapData) {
-    this.nodes = mindmapData.nodes;
-    this.edges = mindmapData.edges;
-    this.rootId = mindmapData.meta.rootId;
-
-    // Создаем карту детей для быстрого поиска
-    this.childrenMap = new Map();
-    this.parentMap = new Map();
-
-    this.edges.forEach((edge) => {
-      if (!this.childrenMap.has(edge.source)) {
-        this.childrenMap.set(edge.source, []);
-      }
-      this.childrenMap.get(edge.source).push(edge.target);
-      this.parentMap.set(edge.target, edge.source);
-    });
-  }
-
-  // Получить корневой узел
-  getRootNode() {
-    return this.nodes.find((node) => node.id === this.rootId);
-  }
-
-  // Получить детей узла
-  getChildren(nodeId) {
-    const childIds = this.childrenMap.get(nodeId) || [];
-    return childIds.map((childId) => this.nodes.find((node) => node.id === childId));
-  }
-
-  // Проверить есть ли дети
-  hasChildren(nodeId) {
-    return this.childrenMap.has(nodeId) && this.childrenMap.get(nodeId).length > 0;
-  }
-
-  // Получить узел по ID
-  getNode(nodeId) {
-    return this.nodes.find((node) => node.id === nodeId);
-  }
-
-  // Получить начальное состояние (root + первый уровень)
-  getInitialState() {
-    const rootNode = this.getRootNode();
-    if (!rootNode) return { nodes: [], edges: [] };
-
-    const nodes = [rootNode];
-    const edges = [];
-    const children = this.getChildren(rootNode.id);
-
-    children.forEach((child) => {
-      nodes.push({
-        ...child,
-        data: {
-          ...child.data,
-          hasChildren: this.hasChildren(child.id),
-        },
-      });
-
-      edges.push({
-        id: `${rootNode.id}-${child.id}`,
-        source: rootNode.id,
-        target: child.id,
-        type: "bezier",
-      });
-    });
-
-    return { nodes, edges };
-  }
-
-  // Раскрыть узел
-  expandNode(nodeId, existingNodes, existingEdges) {
-    const children = this.getChildren(nodeId);
-    const newNodes = [...existingNodes];
-    const newEdges = [...existingEdges];
-
-    // Проверяем, не раскрыт ли уже узел
-    const alreadyExpanded = existingNodes.some((node) => this.parentMap.get(node.id) === nodeId);
-
-    if (alreadyExpanded) {
-      return { nodes: existingNodes, edges: existingEdges };
-    }
-
-    children.forEach((child) => {
-      newNodes.push({
-        ...child,
-        data: {
-          ...child.data,
-          hasChildren: this.hasChildren(child.id),
-        },
-      });
-
-      newEdges.push({
-        id: `${nodeId}-${child.id}`,
-        source: nodeId,
-        target: child.id,
-        type: "bezier",
-      });
-    });
-
-    return { nodes: newNodes, edges: newEdges };
-  }
-}
-
-// Создаем экземпляр навигатора
-export const mindmapNavigator = new MindmapNavigator(MINDMAP_DATA);
