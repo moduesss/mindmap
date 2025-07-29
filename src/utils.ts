@@ -32,137 +32,32 @@ export function getId() {
   return `${Date.now()}`;
 }
 
-// Dark theme цветовая схема для разных уровней вложенности
-export const LEVEL_COLORS = {
-  0: {
-    // Root level
-    background: "#3E60E9",
+// порядок тот же, что в ручной палитре:
+// синий → зеленый → фиолет → оранж → розовый
+const BASE_HUES = [225, 115, 275, 30, 340]; // градусы на цветовом круге (HSL)
+const LEVELS_PER_CLUSTER = 1; // 0‑2, 3‑5, 6‑8 …
+
+// Функция для получения цвета уровня
+export function getLevelColor(level: number) {
+  // 1) какой «кластер» (синий, зеленый …)
+  const cluster = Math.floor(level / LEVELS_PER_CLUSTER);
+  const hue = BASE_HUES[cluster] ?? BASE_HUES.at(-1)!; // запас для 15+
+
+  // 2) яркость‑контраст внутри кластера
+  const idx = level % LEVELS_PER_CLUSTER; // 0 / 1 / 2
+  const lightness = [45, 45, 40][idx]; // светлее‑светлее‑темнее
+  const saturation = 70; // можноTweaks
+
+  const bg = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
+
+  return {
+    background: bg,
     border: "#ffffff14",
     text: "#ffffff",
     button: "#ffffff",
     buttonHover: "#f0f0f0",
-  },
-  1: {
-    // Level 1
-    background: "#4F73F3",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  2: {
-    // Level 2
-    background: "#6086FD",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  3: {
-    // Level 3
-    background: "#35B56A",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  4: {
-    // Level 4
-    background: "#42C47A",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  5: {
-    // Level 5
-    background: "#50D28A",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  6: {
-    // Level 6
-    background: "#7F54E3",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  7: {
-    // Level 7
-    background: "#9065ED",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  8: {
-    // Level 8
-    background: "#A176F7",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  9: {
-    // Level 9
-    background: "#E58B3A",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  10: {
-    // Level 10
-    background: "#F19B4C",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  11: {
-    // Level 11
-    background: "#FBAE62",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  12: {
-    // Level 12
-    background: "#D44570",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  13: {
-    // Level 13
-    background: "#E25783",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  14: {
-    // Level 14
-    background: "#EE6B97",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-  15: {
-    // Level 15+ (резерв)
-    background: "#5B7080",
-    border: "#ffffff14",
-    text: "#ffffff",
-    button: "#ffffff",
-    buttonHover: "#f0f0f0",
-  },
-};
+  };
+}
 
 // Кэш для уровней узлов
 const levelCache = new Map<string, number>();
@@ -217,11 +112,4 @@ export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): numb
   levelCache.set(nodeId, level);
 
   return level;
-}
-
-// Функция для получения цвета уровня
-export function getLevelColor(level: number) {
-  const maxLevel = Math.max(...Object.keys(LEVEL_COLORS).map(Number));
-  const actualLevel = Math.min(level, maxLevel);
-  return LEVEL_COLORS[actualLevel as keyof typeof LEVEL_COLORS] || LEVEL_COLORS[maxLevel];
 }
