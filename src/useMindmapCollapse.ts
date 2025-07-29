@@ -181,7 +181,7 @@ function useMindmapCollapse(
       }),
     ];
 
-    animateWithDisappearing(transitions, targetNodes, allNodesForAnimation, targetEdges);
+    animateWithDisappearing(transitions, targetNodes, allNodesForAnimation);
     previousTargetNodesRef.current = targetNodes;
   }, [targetNodes, targetEdges, getNode]);
 
@@ -210,22 +210,9 @@ function useMindmapCollapse(
         },
       }));
 
-      // Создаем анимированные рёбра, которые следуют за анимированными позициями узлов
-      const animatedEdges = finalEdges
-        .filter((edge) => currNodes.some((n) => n.id === edge.source) && currNodes.some((n) => n.id === edge.target))
-        .map((edge) => {
-          const sourceNode = currNodes.find((n) => n.id === edge.source);
-          const targetNode = currNodes.find((n) => n.id === edge.target);
-
-          if (sourceNode && targetNode) {
-            return {
-              ...edge,
-              source: sourceNode.id,
-              target: targetNode.id,
-            };
-          }
-          return edge;
-        });
+      // Оптимизированная фильтрация edges для больших наборов данных
+      const currNodeIds = new Set(currNodes.map((n) => n.id));
+      const animatedEdges = finalEdges.filter((edge) => currNodeIds.has(edge.source) && currNodeIds.has(edge.target));
 
       setAnimatedNodes(currNodes);
       setAnimatedEdges(animatedEdges);
@@ -251,15 +238,14 @@ function useMindmapCollapse(
       type: "appearing" | "staying" | "disappearing";
     }>,
     finalNodes: Node[],
-    allNodes: Node[],
-    allEdges: Edge[]
+    allNodes: Node[]
   ) => {
-    // Устанавливаем рёбра для всех узлов (включая исчезающие)
-    setAnimatedEdges(
-      allEdges.filter(
-        (edge) => allNodes.some((n) => n.id === edge.source) && allNodes.some((n) => n.id === edge.target)
-      )
+    // Устанавливаем рёбра для всех узлов (включая исчезающие) - используем targetEdges
+    const allNodeIds = new Set(allNodes.map((n) => n.id));
+    const initialAnimationEdges = targetEdges.filter(
+      (edge) => allNodeIds.has(edge.source) && allNodeIds.has(edge.target)
     );
+    setAnimatedEdges(initialAnimationEdges);
 
     const duration = 400;
     const startTime = Date.now();
@@ -292,22 +278,9 @@ function useMindmapCollapse(
         };
       });
 
-      // Создаем анимированные рёбра, которые следуют за анимированными позициями узлов
-      const animatedEdges = allEdges
-        .filter((edge) => currNodes.some((n) => n.id === edge.source) && currNodes.some((n) => n.id === edge.target))
-        .map((edge) => {
-          const sourceNode = currNodes.find((n) => n.id === edge.source);
-          const targetNode = currNodes.find((n) => n.id === edge.target);
-
-          if (sourceNode && targetNode) {
-            return {
-              ...edge,
-              source: sourceNode.id,
-              target: targetNode.id,
-            };
-          }
-          return edge;
-        });
+      // Оптимизированная фильтрация edges для анимации - используем targetEdges
+      const currNodeIds = new Set(currNodes.map((n) => n.id));
+      const animatedEdges = targetEdges.filter((edge) => currNodeIds.has(edge.source) && currNodeIds.has(edge.target));
 
       setAnimatedNodes(currNodes);
       setAnimatedEdges(animatedEdges);
@@ -329,9 +302,18 @@ function useMindmapCollapse(
     requestAnimationFrame(animate);
   };
 
+  // Мемоизация для больших наборов данных с проверкой целостности
+  const finalNodes = animatedNodes.length > 0 ? animatedNodes : targetNodes;
+  let finalEdges = animatedEdges.length > 0 ? animatedEdges : targetEdges;
+
+  // Дополнительная проверка: если у нас есть nodes но нет edges, используем targetEdges
+  if (finalNodes.length > 0 && finalEdges.length === 0 && targetEdges.length > 0) {
+    finalEdges = targetEdges;
+  }
+
   return {
-    nodes: animatedNodes.length > 0 ? animatedNodes : targetNodes,
-    edges: animatedEdges.length > 0 ? animatedEdges : targetEdges,
+    nodes: finalNodes,
+    edges: finalEdges,
   };
 }
 
