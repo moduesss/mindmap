@@ -85,9 +85,10 @@ function useMindmapCollapse(
         y: y + rootOffset.y - 25,
       };
 
+      // Убираем отладочную информацию и вычисление уровня
       const data = {
         ...node.data,
-        level: getNodeLevel(node.id, nodes, edges), // Добавляем уровень
+        // level уже есть в node.data
       };
       return [{ ...node, position, data }];
     });

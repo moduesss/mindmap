@@ -32,64 +32,169 @@ export function getId() {
   return `${Date.now()}`;
 }
 
-// Цветовая схема для разных уровней вложенности
+// Dark theme цветовая схема для разных уровней вложенности
 export const LEVEL_COLORS = {
   0: {
     // Root level
-    background: "#2c3e50",
-    border: "#34495e",
+    background: "#3E60E9",
+    border: "#ffffff14",
     text: "#ffffff",
-    button: "#3498db",
-    buttonHover: "#2980b9",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
   },
   1: {
     // Level 1
-    background: "#34495e",
-    border: "#2c3e50",
+    background: "#4F73F3",
+    border: "#ffffff14",
     text: "#ffffff",
-    button: "#e74c3c",
-    buttonHover: "#c0392b",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
   },
   2: {
     // Level 2
-    background: "#e74c3c",
-    border: "#c0392b",
+    background: "#6086FD",
+    border: "#ffffff14",
     text: "#ffffff",
-    button: "#f39c12",
-    buttonHover: "#e67e22",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
   },
   3: {
     // Level 3
-    background: "#f39c12",
-    border: "#e67e22",
+    background: "#35B56A",
+    border: "#ffffff14",
     text: "#ffffff",
-    button: "#27ae60",
-    buttonHover: "#229954",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
   },
   4: {
     // Level 4
-    background: "#27ae60",
-    border: "#229954",
+    background: "#42C47A",
+    border: "#ffffff14",
     text: "#ffffff",
-    button: "#9b59b6",
-    buttonHover: "#8e44ad",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
   },
   5: {
-    // Level 5+
-    background: "#9b59b6",
-    border: "#8e44ad",
+    // Level 5
+    background: "#50D28A",
+    border: "#ffffff14",
     text: "#ffffff",
-    button: "#1abc9c",
-    buttonHover: "#16a085",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  6: {
+    // Level 6
+    background: "#7F54E3",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  7: {
+    // Level 7
+    background: "#9065ED",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  8: {
+    // Level 8
+    background: "#A176F7",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  9: {
+    // Level 9
+    background: "#E58B3A",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  10: {
+    // Level 10
+    background: "#F19B4C",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  11: {
+    // Level 11
+    background: "#FBAE62",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  12: {
+    // Level 12
+    background: "#D44570",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  13: {
+    // Level 13
+    background: "#E25783",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  14: {
+    // Level 14
+    background: "#EE6B97",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
+  },
+  15: {
+    // Level 15+ (резерв)
+    background: "#5B7080",
+    border: "#ffffff14",
+    text: "#ffffff",
+    button: "#ffffff",
+    buttonHover: "#f0f0f0",
   },
 };
 
-// Функция для определения уровня ноды
-export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): number {
-  if (nodeId === "root") return 0;
+// Кэш для уровней узлов
+const levelCache = new Map<string, number>();
+let lastNodesHash = "";
+let lastEdgesHash = "";
 
-  const visited = new Set<string>();
-  const levelMap = new Map<string, number>();
+// Функция для создания хеша массивов
+function createHash(items: any[]): string {
+  return items
+    .map((item) => item.id)
+    .sort()
+    .join("|");
+}
+
+// Функция для определения уровня ноды (упрощенная версия)
+export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): number {
+  // Создаем хеши для проверки изменений
+  const nodesHash = createHash(nodes);
+  const edgesHash = createHash(edges);
+  const currentHash = `${nodesHash}|${edgesHash}`;
+
+  // Если данные изменились, очищаем кэш
+  if (currentHash !== `${lastNodesHash}|${lastEdgesHash}`) {
+    levelCache.clear();
+    lastNodesHash = nodesHash;
+    lastEdgesHash = edgesHash;
+  }
+
+  // Если уровень уже в кэше, возвращаем его
+  if (levelCache.has(nodeId)) {
+    return levelCache.get(nodeId)!;
+  }
 
   // Создаем карту родителей
   const parentMap = new Map<string, string>();
@@ -97,26 +202,21 @@ export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): numb
     parentMap.set(edge.target, edge.source);
   });
 
+  // Простая функция для вычисления уровня
   function calculateLevel(nodeId: string): number {
-    if (visited.has(nodeId)) {
-      return levelMap.get(nodeId) || 0;
-    }
-
-    visited.add(nodeId);
+    if (nodeId === "root") return 0;
 
     const parentId = parentMap.get(nodeId);
-    if (!parentId) {
-      levelMap.set(nodeId, 0);
-      return 0;
-    }
+    if (!parentId) return 0;
 
-    const parentLevel = calculateLevel(parentId);
-    const currentLevel = parentLevel + 1;
-    levelMap.set(nodeId, currentLevel);
-    return currentLevel;
+    return calculateLevel(parentId) + 1;
   }
 
-  return calculateLevel(nodeId);
+  // Вычисляем уровень для всех узлов и кэшируем
+  const level = calculateLevel(nodeId);
+  levelCache.set(nodeId, level);
+
+  return level;
 }
 
 // Функция для получения цвета уровня
