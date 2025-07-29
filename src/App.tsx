@@ -28,7 +28,7 @@ function ReactFlowAutoLayout() {
   const { fitView } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
   // Используем обновленный хук с анимациями
   const { nodes: visibleNodes, edges: visibleEdges } = useMindmapCollapse(nodes, edges, {

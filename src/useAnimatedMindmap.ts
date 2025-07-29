@@ -17,10 +17,10 @@ function useAnimatedMindmap(
   collapseOptions: { direction?: "TB" | "LR" | "BT" | "RL"; spacing?: [number, number] } = {}
 ) {
   const initial = useRef(true);
-  const { getNodes, getNode, setNodes, fitView } = useReactFlow();
+  const { getNode, setNodes, fitView } = useReactFlow();
 
   // Получаем текущее состояние для отслеживания изменений
-  const currentState = useStore(stateSelector);
+  useStore(stateSelector);
 
   // Получаем целевые позиции из collapse hook
   const { nodes: targetNodes, edges: visibleEdges } = useMindmapCollapse(nodes, edges, collapseOptions);

@@ -1,9 +1,6 @@
 import { useMemo, useEffect, useState, useRef } from "react";
 import { Node, Edge, useReactFlow } from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
-import { Position } from "@xyflow/react";
-import { Direction } from "./algorithms";
-import { getNodeLevel } from "./utils"; // Добавляем импорт
 
 export type UseMindmapCollapseOptions = {
   direction?: "TB" | "LR" | "BT" | "RL";
@@ -32,11 +29,10 @@ function useMindmapCollapse(
   const { getNode } = useReactFlow();
   const [animatedNodes, setAnimatedNodes] = useState<Node[]>([]);
   const [animatedEdges, setAnimatedEdges] = useState<Edge[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
   const previousTargetNodesRef = useRef<Node[]>([]);
 
-  // Вычисляем целевые позиции
-  const targetNodes = useMemo(() => {
+  // Вычисляем целевые позиции и edges
+  const { targetNodes, targetEdges } = useMemo(() => {
     const dagre = new Dagre.graphlib.Graph()
       .setDefaultEdgeLabel(() => ({}))
       .setGraph({
@@ -76,7 +72,8 @@ function useMindmapCollapse(
       };
     }
 
-    return nodes.flatMap((node) => {
+    // Получаем только те узлы, которые остались в Dagre графе
+    const validNodes = nodes.flatMap((node) => {
       if (!dagre.hasNode(node.id)) return [];
 
       const { x, y } = dagre.node(node.id);
@@ -85,13 +82,24 @@ function useMindmapCollapse(
         y: y + rootOffset.y - 25,
       };
 
-      // Убираем отладочную информацию и вычисление уровня
       const data = {
         ...node.data,
-        // level уже есть в node.data
       };
       return [{ ...node, position, data }];
     });
+
+    // Извлекаем edges из Dagre графа после обработки
+    const dagreEdges = dagre.edges().map((edgeObj) => {
+      const edgeId = `${edgeObj.v}-${edgeObj.w}`;
+      return {
+        id: edgeId,
+        source: edgeObj.v,
+        target: edgeObj.w,
+      };
+    });
+
+    // Debug removed
+    return { targetNodes: validNodes, targetEdges: dagreEdges };
   }, [nodes, edges, direction, spacing]);
 
   // Анимация к целевым позициям
@@ -100,17 +108,13 @@ function useMindmapCollapse(
 
     if (previousTargetNodes.length === 0) {
       setAnimatedNodes(targetNodes);
-      setAnimatedEdges(
-        edges.filter(
-          (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
-        )
-      );
+      setAnimatedEdges(targetEdges);
       previousTargetNodesRef.current = targetNodes;
       return;
     }
 
     const parentMap = new Map<string, string>();
-    edges.forEach((edge) => {
+    targetEdges.forEach((edge) => {
       parentMap.set(edge.target, edge.source);
     });
 
@@ -121,17 +125,15 @@ function useMindmapCollapse(
     const stayingNodes = targetNodes.filter((n) => previousIds.has(n.id));
     const disappearingNodes = previousTargetNodes.filter((n) => !currentIds.has(n.id));
 
+    // Debug logging removed
+
     // Если нет изменений узлов, просто обновляем позиции
     if (appearingNodes.length === 0 && disappearingNodes.length === 0) {
       if (stayingNodes.length > 0) {
-        animatePositions(stayingNodes, targetNodes, edges);
+        animatePositions(stayingNodes, targetNodes, targetEdges);
       } else {
         setAnimatedNodes(targetNodes);
-        setAnimatedEdges(
-          edges.filter(
-            (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
-          )
-        );
+        setAnimatedEdges(targetEdges);
       }
       previousTargetNodesRef.current = targetNodes;
       return;
@@ -179,9 +181,9 @@ function useMindmapCollapse(
       }),
     ];
 
-    animateWithDisappearing(transitions, targetNodes, allNodesForAnimation, edges);
+    animateWithDisappearing(transitions, targetNodes, allNodesForAnimation, targetEdges);
     previousTargetNodesRef.current = targetNodes;
-  }, [targetNodes, getNode, edges]);
+  }, [targetNodes, targetEdges, getNode]);
 
   // Функция анимации позиций (без появления/исчезновения)
   const animatePositions = (nodesToAnimate: Node[], finalNodes: Node[], finalEdges: Edge[]) => {
@@ -232,11 +234,7 @@ function useMindmapCollapse(
         requestAnimationFrame(animate);
       } else {
         setAnimatedNodes(finalNodes);
-        setAnimatedEdges(
-          finalEdges.filter(
-            (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
-          )
-        );
+        setAnimatedEdges(targetEdges);
       }
     };
 
@@ -244,9 +242,18 @@ function useMindmapCollapse(
   };
 
   // Функция анимации с исчезающими узлами
-  const animateWithDisappearing = (transitions: any[], finalNodes: Node[], allNodes: Node[], allEdges: Edge[]) => {
-    setIsAnimating(true);
-
+  const animateWithDisappearing = (
+    transitions: Array<{
+      id: string;
+      from: { x: number; y: number };
+      to: { x: number; y: number };
+      node: Node;
+      type: "appearing" | "staying" | "disappearing";
+    }>,
+    finalNodes: Node[],
+    allNodes: Node[],
+    allEdges: Edge[]
+  ) => {
     // Устанавливаем рёбра для всех узлов (включая исчезающие)
     setAnimatedEdges(
       allEdges.filter(
@@ -315,12 +322,7 @@ function useMindmapCollapse(
             style: { ...node.style, opacity: 1 },
           }))
         );
-        setAnimatedEdges(
-          allEdges.filter(
-            (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
-          )
-        );
-        setIsAnimating(false);
+        setAnimatedEdges(targetEdges);
       }
     };
 
@@ -329,12 +331,7 @@ function useMindmapCollapse(
 
   return {
     nodes: animatedNodes.length > 0 ? animatedNodes : targetNodes,
-    edges:
-      animatedEdges.length > 0
-        ? animatedEdges
-        : edges.filter(
-            (edge) => targetNodes.some((n) => n.id === edge.source) && targetNodes.some((n) => n.id === edge.target)
-          ),
+    edges: animatedEdges.length > 0 ? animatedEdges : targetEdges,
   };
 }
 

@@ -65,7 +65,7 @@ let lastNodesHash = "";
 let lastEdgesHash = "";
 
 // Функция для создания хеша массивов
-function createHash(items: any[]): string {
+function createHash(items: { id: string }[]): string {
   return items
     .map((item) => item.id)
     .sort()

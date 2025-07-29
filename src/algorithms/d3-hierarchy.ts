@@ -1,18 +1,19 @@
-import { type LayoutAlgorithm, type Direction } from '.';
-import { type Node, getIncomers } from '@xyflow/react';
-import { type HierarchyPointNode, stratify, tree } from 'd3-hierarchy';
+import { type LayoutAlgorithm, type Direction } from ".";
+import { type Node, getIncomers } from "@xyflow/react";
+// @ts-expect-error - d3-hierarchy types not available
+import { type HierarchyPointNode, stratify, tree } from "d3-hierarchy";
 
 // D3 Hierarchy doesn't support layouting in different directions, but we can
 // swap the coordinates around in different ways to get the same effect.
 const getPosition = (x: number, y: number, direction: Direction) => {
   switch (direction) {
-    case 'TB':
+    case "TB":
       return { x, y };
-    case 'LR':
+    case "LR":
       return { x: y, y: x };
-    case 'BT':
+    case "BT":
       return { x: -x, y: -y };
-    case 'RL':
+    case "RL":
       return { x: -y, y: x };
   }
 };
@@ -30,7 +31,7 @@ const layout = tree<NodeWithPosition>()
 // guarantee that, we create a fake root node here and will make sure any real
 // nodes without an incoming edge will get connected to this fake root node.
 const rootNode = {
-  id: 'd3-hierarchy-root',
+  id: "d3-hierarchy-root",
   x: 0,
   y: 0,
   position: { x: 0, y: 0 },
@@ -38,7 +39,7 @@ const rootNode = {
 };
 
 const d3HierarchyLayout: LayoutAlgorithm = async (nodes, edges, options) => {
-  const isHorizontal = options.direction === 'RL' || options.direction === 'LR';
+  const isHorizontal = options.direction === "RL" || options.direction === "LR";
 
   const initialNodes = [] as NodeWithPosition[];
   let maxNodeWidth = 0;
@@ -74,7 +75,7 @@ const d3HierarchyLayout: LayoutAlgorithm = async (nodes, edges, options) => {
   };
 
   const hierarchy = stratify<NodeWithPosition>()
-    .id((d) => d.id)
+    .id((d: NodeWithPosition) => d.id)
     .parentId(getParentId)([rootNode, ...initialNodes]);
 
   // We create a map of the laid out nodes here to avoid multiple traversals when

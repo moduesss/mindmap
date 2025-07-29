@@ -9,8 +9,8 @@ interface MindmapNodeData {
   level?: number;
 }
 
-const MindmapNode = memo(({ data }: NodeProps<{ data: MindmapNodeData }>) => {
-  const { label, expanded, expandable, level = 0 } = data;
+const MindmapNode = memo(({ data }: NodeProps) => {
+  const { label, expanded, expandable, level = 0 } = data as unknown as MindmapNodeData;
   const colors = getLevelColor(level);
 
   return (
