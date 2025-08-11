@@ -1,0 +1,161 @@
+/* Mindmap component styles */
+
+/* Стили для mindmap узлов */
+.react-flow__handle {
+  visibility: hidden;
+}
+
+/* Переопределяем стили для mindmap узлов */
+.react-flow__node-mindmap {
+  width: 200px;
+  height: 50px;
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  font-size: 12px !important;
+  flex-direction: column !important;
+  color: inherit !important;
+}
+
+.react-flow__node-mindmap:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.react-flow__node-mindmap > div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.mindmap-expand-button {
+  /* базовая геометрия */
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  background: transparent;
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+/* две перекрещённые линии = «плюс» */
+.mindmap-expand-button::before,
+.mindmap-expand-button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: currentColor;
+}
+
+/* горизонтальная */
+.mindmap-expand-button::before {
+  width: 10px;
+  height: 1.6px;
+}
+
+/* вертикальная */
+.mindmap-expand-button::after {
+  width: 1.6px;
+  height: 10px;
+}
+
+/* ------------- состояние «минус» ------------------ */
+.mindmap-expand-button.is-expanded::after {
+  /* прячем вертикальную палочку => остаётся только горизонтальная */
+  display: none;
+}
+
+/* ------------- ховер ------------------------------ */
+.mindmap-expand-button:hover {
+  background: #fff; /* кружок белый */
+  border-color: #fff; /* границу прячем на белом фоне */
+  color: var(--node-color); /* сам плюс/минус цвета узла */
+  transform: scale(1.1);
+}
+
+.mindmap-node-content {
+  flex: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+/* Общие стили для контейнера mindmap */
+.mindmap-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Dark theme для React Flow */
+.mindmap-container .react-flow {
+  background-color: #0d1117;
+}
+
+.mindmap-container .react-flow__background {
+  background-color: #0d1117;
+}
+
+.mindmap-container .react-flow__controls {
+  background-color: #161b22;
+  border: 1px solid #30363d;
+}
+
+.mindmap-container .react-flow__controls button {
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+}
+
+.mindmap-container .react-flow__controls button:hover {
+  background-color: #30363d;
+}
+
+/* Light theme для React Flow */
+.mindmap-container.light .react-flow {
+  background-color: #ffffff;
+}
+
+.mindmap-container.light .react-flow__background {
+  background-color: #ffffff;
+}
+
+.mindmap-container.light .react-flow__controls {
+  background-color: #f6f8fa;
+  border: 1px solid #d1d9e0;
+}
+
+.mindmap-container.light .react-flow__controls button {
+  background-color: #ffffff;
+  border: 1px solid #d1d9e0;
+  color: #24292f;
+}
+
+.mindmap-container.light .react-flow__controls button:hover {
+  background-color: #f6f8fa;
+}
