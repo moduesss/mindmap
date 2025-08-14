@@ -211,8 +211,10 @@ function useMindmapCollapse(
       }));
 
       // Оптимизированная фильтрация edges для больших наборов данных
-      const currNodeIds = new Set(currNodes.map((n) => n.id));
-      const animatedEdges = finalEdges.filter((edge) => currNodeIds.has(edge.source) && currNodeIds.has(edge.target));
+      const allNodeIds = new Set(finalNodes.map((n) => n.id));
+      const animatedEdges = finalEdges.filter(
+          (edge) => allNodeIds.has(edge.source) && allNodeIds.has(edge.target)
+      );
 
       setAnimatedNodes(currNodes);
       setAnimatedEdges(animatedEdges);
@@ -247,7 +249,7 @@ function useMindmapCollapse(
     );
     setAnimatedEdges(initialAnimationEdges);
 
-    const duration = 400;
+    const duration = 600;
     const startTime = Date.now();
 
     const animate = () => {
@@ -279,8 +281,10 @@ function useMindmapCollapse(
       });
 
       // Оптимизированная фильтрация edges для анимации - используем targetEdges
-      const currNodeIds = new Set(currNodes.map((n) => n.id));
-      const animatedEdges = targetEdges.filter((edge) => currNodeIds.has(edge.source) && currNodeIds.has(edge.target));
+      const allNodeIdsForAnimation = new Set(allNodes.map((n) => n.id));
+      const animatedEdges = targetEdges.filter(
+          (edge) => allNodeIdsForAnimation.has(edge.source) && allNodeIdsForAnimation.has(edge.target)
+      );
 
       setAnimatedNodes(currNodes);
       setAnimatedEdges(animatedEdges);
