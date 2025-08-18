@@ -4,7 +4,7 @@
 // Полностью имплементировать не нужно, но нужно разбить на hooks, types, ui, utils, constants, etc.
 // Также нужно учесть, что данные компонент будет получать из бэкенда
 
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -18,15 +18,15 @@ import {
   Edge,
 } from "@xyflow/react";
 
-import MindmapNode from "./MindmapNode";
-import useMindmapCollapse from "./useMindmapCollapse";
-import { transformMindmapData } from "./utils";
-import { MindmapProps } from "./types";
+import MindmapNode from "./MIndmapNode/MindmapNode";
+import useMindmapCollapse from "../../model/useMindmapCollapse";
+import { transformMindmapData } from "../../model/utils";
+import { MindmapProps } from "../../lib/types";
 
 // Import React Flow styles
 import "@xyflow/react/dist/style.css";
 // Import our custom styles
-import "./mindmap.css";
+import "../../lib/mindmap.css";
 
 const proOptions = {
   hideAttribution: true,
@@ -123,4 +123,4 @@ export default function Mindmap(props: MindmapProps) {
 }
 
 // Экспортируем типы для удобства использования
-export type { MindmapProps, MindmapData, MindmapNodeData } from "./types";
+export type { MindmapProps, MindmapData, MindmapNodeData } from "../../lib/types";

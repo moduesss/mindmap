@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useState, useRef } from "react";
 import { useReactFlow, Node, Edge } from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
-import { UseMindmapCollapseOptions } from "./types";
+import { UseMindmapCollapseOptions } from "../lib/types";
 
 function filterCollapsedChildren(dagre: Dagre.graphlib.Graph, node: Node) {
   const children = dagre.successors(node.id) as unknown as string[] | undefined;

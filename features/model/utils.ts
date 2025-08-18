@@ -1,8 +1,7 @@
-import { Position } from "@xyflow/react";
-import { Direction } from "./algorithms";
-import { Node, Edge } from "@xyflow/react";
+import { Position, Node, Edge } from "@xyflow/react";
+import { Direction, ColorScheme } from "../lib/types";
 
-export function getSourceHandlePosition(direction: Direction) {
+export function getSourceHandlePosition(direction: Direction): Position {
   switch (direction) {
     case "TB":
       return Position.Bottom;
@@ -15,7 +14,7 @@ export function getSourceHandlePosition(direction: Direction) {
   }
 }
 
-export function getTargetHandlePosition(direction: Direction) {
+export function getTargetHandlePosition(direction: Direction): Position {
   switch (direction) {
     case "TB":
       return Position.Top;
@@ -28,25 +27,22 @@ export function getTargetHandlePosition(direction: Direction) {
   }
 }
 
-export function getId() {
+export function getId(): string {
   return `${Date.now()}`;
 }
 
-// порядок тот же, что в ручной палитре:
-// синий → зеленый → фиолет → оранж → розовый
-const BASE_HUES = [225, 115, 275, 30, 340]; // градусы на цветовом круге (HSL)
-const LEVELS_PER_CLUSTER = 1; // 0‑2, 3‑5, 6‑8 …
+// Цветовая схема для разных уровней mindmap
+const BASE_HUES = [225, 115, 275, 30, 340]; // синий → зеленый → фиолет → оранж → розовый
+const LEVELS_PER_CLUSTER = 1;
 
 // Функция для получения цвета уровня
-export function getLevelColor(level: number) {
-  // 1) какой «кластер» (синий, зеленый …)
+export function getLevelColor(level: number): ColorScheme {
   const cluster = Math.floor(level / LEVELS_PER_CLUSTER);
-  const hue = BASE_HUES[cluster] ?? BASE_HUES.at(-1)!; // запас для 15+
+  const hue = BASE_HUES[cluster] ?? BASE_HUES.at(-1)!;
 
-  // 2) яркость‑контраст внутри кластера
-  const idx = level % LEVELS_PER_CLUSTER; // 0 / 1 / 2
-  const lightness = [45, 45, 40][idx]; // светлее‑светлее‑темнее
-  const saturation = 70; // можноTweaks
+  const idx = level % LEVELS_PER_CLUSTER;
+  const lightness = [45, 45, 40][idx] || 45;
+  const saturation = 70;
 
   const bg = `hsl(${hue}deg ${saturation}% ${lightness}%)`;
 
@@ -72,7 +68,7 @@ function createHash(items: { id: string }[]): string {
     .join("|");
 }
 
-// Функция для определения уровня ноды (упрощенная версия)
+// Функция для определения уровня ноды
 export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): number {
   // Создаем хеши для проверки изменений
   const nodesHash = createHash(nodes);
@@ -97,7 +93,7 @@ export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): numb
     parentMap.set(edge.target, edge.source);
   });
 
-  // Простая функция для вычисления уровня
+  // Функция для вычисления уровня
   function calculateLevel(nodeId: string): number {
     if (nodeId === "root") return 0;
 
@@ -112,4 +108,43 @@ export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): numb
   levelCache.set(nodeId, level);
 
   return level;
+}
+
+// Функция для преобразования данных в формат React Flow
+export function transformMindmapData(data: any): { nodes: Node[]; edges: Edge[] } {
+  // Функция для определения, должен ли узел быть развернут изначально
+  function shouldBeExpanded(nodeId: string): boolean {
+    const rootId = data.meta?.rootId || "root";
+    return nodeId === rootId;
+  }
+
+  // Преобразуем узлы
+  const nodes: Node[] = data.nodes.map((node: any) => {
+    const level = getNodeLevel(node.id, data.nodes, data.edges);
+
+    return {
+      id: node.id,
+      type: "mindmap",
+      data: {
+        ...node.data,
+        expanded: shouldBeExpanded(node.id),
+        expandable: false, // будет установлено в useMindmapCollapse
+        level: level,
+      },
+      position: { x: 0, y: 0 }, // позиции будут вычислены автоматически
+      style: {
+        ...node.style,
+        opacity: 1,
+      },
+    };
+  });
+
+  // Преобразуем рёбра
+  const edges: Edge[] = data.edges.map((edge: any) => ({
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+  }));
+
+  return { nodes, edges };
 }

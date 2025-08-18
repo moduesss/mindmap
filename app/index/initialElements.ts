@@ -1,7 +1,7 @@
 import { type Node, type Edge } from "@xyflow/react";
 // @ts-expect-error - JS file without type declarations
-import { MINDMAP_DATA } from "../mindmap-data.js";
-import { getNodeLevel } from "./utils";
+import { MINDMAP_DATA } from "../../public/mindmap-data.js";
+import { getNodeLevel } from "../../features/model/utils";
 
 // Функция для определения, должен ли узел быть развернут изначально
 function shouldBeExpanded(nodeId: string): boolean {

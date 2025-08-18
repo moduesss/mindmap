@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client';
 
 import App from './App';
 
-import './index.css';
-import './xy-theme.css';
+import './index/index.css';
+import './index/xy-theme.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

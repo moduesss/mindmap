@@ -1,5 +1,5 @@
 import Elk, { type ElkNode } from 'elkjs/lib/elk.bundled.js';
-import { type Direction, type LayoutAlgorithm } from '.';
+import { type Direction, type LayoutAlgorithm } from './index';
 
 const elk = new Elk();
 

@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { getLevelColor } from "./utils";
+import { getLevelColor } from "../../features/model/utils";
 
 interface MindmapNodeData {
   label: string;

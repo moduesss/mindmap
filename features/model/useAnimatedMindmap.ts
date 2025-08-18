@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useReactFlow, useStore, Node, Edge, ReactFlowState } from "@xyflow/react";
 import { timer } from "d3-timer";
-import useMindmapCollapse from "./useMindmapCollapse";
+import useMindmapCollapse from "../../src/useMindmapCollapse";
 
 const options = { duration: 400 };
 

@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { getLevelColor } from "./utils";
-import { MindmapNodeData } from "./types";
+import { getLevelColor } from "../../../model/utils";
+import { MindmapNodeData } from "../../../lib/types";
 
 const MindmapNode = memo(({ data }: NodeProps) => {
   const { label, expanded, expandable, level = 0 } = data as MindmapNodeData;

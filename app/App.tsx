@@ -10,9 +10,9 @@ import {
   Controls,
 } from "@xyflow/react";
 
-import MindmapNode from "./MindmapNode";
-import useMindmapCollapse from "./useMindmapCollapse";
-import { nodes as initialNodes, edges as initialEdges } from "./initialElements";
+import MindmapNode from "./index/MindmapNode";
+import useMindmapCollapse from "../features/model/useMindmapCollapse";
+import { nodes as initialNodes, edges as initialEdges } from "./index/initialElements";
 
 import "@xyflow/react/dist/style.css";
 
