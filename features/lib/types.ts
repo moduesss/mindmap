@@ -7,6 +7,7 @@ export interface MindmapNodeData extends Record<string, unknown> {
   expanded: boolean;
   expandable?: boolean;
   level?: number;
+  direction?: Direction;
 }
 
 export interface MindmapNode extends Node {
@@ -25,9 +26,9 @@ export interface MindmapData {
     type?: string;
     data: {
       label: string;
-      [key: string]: any;
+      [key: string]: unknown;
     };
-    style?: Record<string, any>;
+    style?: Record<string, unknown>;
   }>;
   edges: Array<{
     id: string;

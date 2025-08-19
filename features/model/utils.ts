@@ -1,5 +1,5 @@
 import { Position, Node, Edge } from "@xyflow/react";
-import { Direction, ColorScheme } from "../lib/types";
+import { Direction, ColorScheme, MindmapData } from "../lib/types";
 
 export function getSourceHandlePosition(direction: Direction): Position {
   switch (direction) {
@@ -111,7 +111,7 @@ export function getNodeLevel(nodeId: string, nodes: Node[], edges: Edge[]): numb
 }
 
 // Функция для преобразования данных в формат React Flow
-export function transformMindmapData(data: any): { nodes: Node[]; edges: Edge[] } {
+export function transformMindmapData(data: MindmapData): { nodes: Node[]; edges: Edge[] } {
   // Функция для определения, должен ли узел быть развернут изначально
   function shouldBeExpanded(nodeId: string): boolean {
     const rootId = data.meta?.rootId || "root";
@@ -119,8 +119,9 @@ export function transformMindmapData(data: any): { nodes: Node[]; edges: Edge[] 
   }
 
   // Преобразуем узлы
-  const nodes: Node[] = data.nodes.map((node: any) => {
-    const level = getNodeLevel(node.id, data.nodes, data.edges);
+  const nodes: Node[] = data.nodes.map((node) => {
+    // @ts-ignore
+      const level = getNodeLevel(node.id, data.nodes, data.edges);
 
     return {
       id: node.id,
@@ -140,7 +141,7 @@ export function transformMindmapData(data: any): { nodes: Node[]; edges: Edge[] 
   });
 
   // Преобразуем рёбра
-  const edges: Edge[] = data.edges.map((edge: any) => ({
+  const edges: Edge[] = data.edges.map((edge) => ({
     id: edge.id,
     source: edge.source,
     target: edge.target,

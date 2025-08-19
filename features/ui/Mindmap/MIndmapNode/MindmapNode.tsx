@@ -1,10 +1,14 @@
 import React, { memo } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
-import { getLevelColor } from "../../../model/utils";
+import { Handle, NodeProps } from "@xyflow/react";
+import {
+    getLevelColor,
+    getSourceHandlePosition,
+    getTargetHandlePosition,
+} from "../../../model/utils";
 import { MindmapNodeData } from "../../../lib/types";
 
 const MindmapNode = memo(({ data }: NodeProps) => {
-  const { label, expanded, expandable, level = 0 } = data as MindmapNodeData;
+    const { label, expanded, expandable, level = 0, direction = "LR" } = data as MindmapNodeData;
   const colors = getLevelColor(level);
 
   return (
@@ -23,7 +27,11 @@ const MindmapNode = memo(({ data }: NodeProps) => {
         } as React.CSSProperties
       }
     >
-      <Handle type="target" position={Position.Left} style={{ visibility: "hidden" }} />
+        <Handle
+            type="target"
+            position={getTargetHandlePosition(direction)}
+            style={{ visibility: "hidden" }}
+        />
 
       <div className="mindmap-node-content">{label}</div>
 
@@ -34,7 +42,11 @@ const MindmapNode = memo(({ data }: NodeProps) => {
         />
       )}
 
-      <Handle type="source" position={Position.Right} style={{ visibility: "hidden" }} />
+        <Handle
+            type="source"
+            position={getSourceHandlePosition(direction)}
+            style={{ visibility: "hidden" }}
+        />
     </div>
   );
 });

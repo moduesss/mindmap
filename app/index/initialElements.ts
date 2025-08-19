@@ -2,6 +2,7 @@ import { type Node, type Edge } from "@xyflow/react";
 // @ts-expect-error - JS file without type declarations
 import { MINDMAP_DATA } from "../../public/mindmap-data.js";
 import { getNodeLevel } from "../../features/model/utils";
+import { MindmapData } from "../../features/lib/types";
 
 // Функция для определения, должен ли узел быть развернут изначально
 function shouldBeExpanded(nodeId: string): boolean {
@@ -10,8 +11,10 @@ function shouldBeExpanded(nodeId: string): boolean {
   return nodeId === rootId;
 }
 
+const DATA = MINDMAP_DATA as MindmapData;
+
 // Конвертируем данные из mindmap-data.js в формат React Flow с expand/collapse
-export const nodes: Node[] = MINDMAP_DATA.nodes.map((node: any) => {
+export const nodes: Node[] = DATA.nodes.map((node) => {
   // Вычисляем уровень для каждого узла
   const level = getNodeLevel(node.id, MINDMAP_DATA.nodes, MINDMAP_DATA.edges);
 
@@ -32,7 +35,7 @@ export const nodes: Node[] = MINDMAP_DATA.nodes.map((node: any) => {
   };
 });
 
-export const edges: Edge[] = MINDMAP_DATA.edges.map((edge: any) => ({
+export const edges: Edge[] = DATA.edges.map((edge) => ({
   id: edge.id,
   source: edge.source,
   target: edge.target,

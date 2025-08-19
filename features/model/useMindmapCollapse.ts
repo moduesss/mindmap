@@ -3,12 +3,18 @@ import { useReactFlow, Node, Edge } from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
 import { UseMindmapCollapseOptions } from "../lib/types";
 
+interface CollapseNodeData {
+    expandable?: boolean;
+    expanded?: boolean;
+}
+
 function filterCollapsedChildren(dagre: Dagre.graphlib.Graph, node: Node) {
   const children = dagre.successors(node.id) as unknown as string[] | undefined;
 
-  (node.data as any).expandable = !!children?.length;
+  const data = node.data as CollapseNodeData;
+  data.expandable = !!children?.length;
 
-  if (!(node.data as any).expanded) {
+  if (!data.expanded) {
     while (children?.length) {
       const child = children.pop()!;
       children.push(...(dagre.successors(child) as unknown as string[]));
@@ -80,6 +86,7 @@ function useMindmapCollapse(
 
       const data = {
         ...node.data,
+        direction,
       };
       return [{ ...node, position, data }];
     });
@@ -175,7 +182,8 @@ function useMindmapCollapse(
     ];
 
     animateWithDisappearing(transitions, targetNodes, allNodesForAnimation);
-    previousTargetNodesRef.current = targetNodes;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+      previousTargetNodesRef.current = targetNodes;
   }, [targetNodes, targetEdges, getNode]);
 
   // Функция анимации позиций (без появления/исчезновения)

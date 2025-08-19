@@ -59,7 +59,7 @@ function ReactFlowAutoLayout() {
     if (visibleNodes.length > 0) {
       fitView({ duration: 500, padding: 0.1 });
     }
-  }, []); // Пустой массив зависимостей - только при монтировании
+  }, [fitView]);
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
