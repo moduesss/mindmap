@@ -1,11 +1,11 @@
-import { useMemo, useEffect, useState, useRef } from "react";
+import { useMemo, useEffect, useState, useRef, useCallback } from "react";
 import { useReactFlow, Node, Edge } from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
 import { UseMindmapCollapseOptions } from "../lib/types";
 
 interface CollapseNodeData {
-    expandable?: boolean;
-    expanded?: boolean;
+  expandable?: boolean;
+  expanded?: boolean;
 }
 
 function filterCollapsedChildren(dagre: Dagre.graphlib.Graph, node: Node) {
@@ -24,9 +24,9 @@ function filterCollapsedChildren(dagre: Dagre.graphlib.Graph, node: Node) {
 }
 
 function useMindmapCollapse(
-  nodes: Node[],
-  edges: Edge[],
-  { direction = "LR", spacing = [250, 80] }: UseMindmapCollapseOptions = {}
+    nodes: Node[],
+    edges: Edge[],
+    { direction = "LR", spacing = [250, 80] }: UseMindmapCollapseOptions = {}
 ): { nodes: Node[]; edges: Edge[] } {
   const { getNode } = useReactFlow();
   const [animatedNodes, setAnimatedNodes] = useState<Node[]>([]);
@@ -36,16 +36,18 @@ function useMindmapCollapse(
   // Вычисляем целевые позиции и edges
   const { targetNodes, targetEdges } = useMemo(() => {
     const dagre = new Dagre.graphlib.Graph()
-      .setDefaultEdgeLabel(() => ({}))
-      .setGraph({
-        rankdir: direction,
-        nodesep: spacing[1],
-        ranksep: spacing[0],
-        marginx: 20,
-        marginy: 20,
-      });
+        .setDefaultEdgeLabel(() => ({}))
+        .setGraph({
+          rankdir: direction,
+          nodesep: spacing[1],
+          ranksep: spacing[0],
+          marginx: 20,
+          marginy: 20,
+        });
 
-    for (const node of nodes) {
+    // Добавляем вершины в dagre граф
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
       dagre.setNode(node.id, {
         width: 200,
         height: 50,
@@ -53,11 +55,13 @@ function useMindmapCollapse(
       });
     }
 
-    for (const edge of edges) {
+    for (let i = 0; i < edges.length; i++) {
+      const edge = edges[i];
       dagre.setEdge(edge.source, edge.target);
     }
 
-    for (const node of nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
       filterCollapsedChildren(dagre, node);
     }
 
@@ -75,8 +79,10 @@ function useMindmapCollapse(
     }
 
     // Получаем только те узлы, которые остались в Dagre графе
-    const validNodes: Node[] = nodes.flatMap((node) => {
-      if (!dagre.hasNode(node.id)) return [];
+    const validNodes: Node[] = [];
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (!dagre.hasNode(node.id)) continue;
 
       const { x, y } = dagre.node(node.id);
       const position = {
@@ -88,23 +94,27 @@ function useMindmapCollapse(
         ...node.data,
         direction,
       };
-      return [{ ...node, position, data }];
-    });
+      validNodes.push({ ...node, position, data });
+    }
 
     // Извлекаем edges из Dagre графа после обработки
-    const dagreEdges: Edge[] = dagre.edges().map((edgeObj) => {
+    const dagreEdges: Edge[] = [];
+    const dagreEdgesList = dagre.edges();
+    for (let i = 0; i < dagreEdgesList.length; i++) {
+      const edgeObj = dagreEdgesList[i];
       const edgeId = `${edgeObj.v}-${edgeObj.w}`;
-      return {
+      dagreEdges.push({
         id: edgeId,
         source: edgeObj.v,
         target: edgeObj.w,
-      };
-    });
+      });
+    }
 
     return { targetNodes: validNodes, targetEdges: dagreEdges };
   }, [nodes, edges, direction, spacing]);
 
   // Анимация к целевым позициям
+  // @ts-ignore
   useEffect(() => {
     const previousTargetNodes = previousTargetNodesRef.current;
 
@@ -115,17 +125,42 @@ function useMindmapCollapse(
       return;
     }
 
+    // Строим карту родителей целевых ребер
     const parentMap = new Map<string, string>();
-    targetEdges.forEach((edge) => {
+    for (let i = 0; i < targetEdges.length; i++) {
+      const edge = targetEdges[i];
       parentMap.set(edge.target, edge.source);
-    });
+    }
 
-    const currentIds = new Set(targetNodes.map((n) => n.id));
-    const previousIds = new Set(previousTargetNodes.map((n) => n.id));
+    // Собираем множества идентификаторов для поиска различий
+    const currentIds = new Set<string>();
+    for (let i = 0; i < targetNodes.length; i++) {
+      currentIds.add(targetNodes[i].id);
+    }
+    const previousIds = new Set<string>();
+    for (let i = 0; i < previousTargetNodes.length; i++) {
+      previousIds.add(previousTargetNodes[i].id);
+    }
 
-    const appearingNodes = targetNodes.filter((n) => !previousIds.has(n.id));
-    const stayingNodes = targetNodes.filter((n) => previousIds.has(n.id));
-    const disappearingNodes = previousTargetNodes.filter((n) => !currentIds.has(n.id));
+    // Фильтруем появившиеся, оставшиеся и исчезающие узлы
+    const appearingNodes: Node[] = [];
+    const stayingNodes: Node[] = [];
+    const disappearingNodes: Node[] = [];
+
+    for (let i = 0; i < targetNodes.length; i++) {
+      const n = targetNodes[i];
+      if (!previousIds.has(n.id)) {
+        appearingNodes.push(n);
+      } else {
+        stayingNodes.push(n);
+      }
+    }
+    for (let i = 0; i < previousTargetNodes.length; i++) {
+      const n = previousTargetNodes[i];
+      if (!currentIds.has(n.id)) {
+        disappearingNodes.push(n);
+      }
+    }
 
     // Если нет изменений узлов, просто обновляем позиции
     if (appearingNodes.length === 0 && disappearingNodes.length === 0) {
@@ -140,174 +175,244 @@ function useMindmapCollapse(
     }
 
     // Создаем полный список узлов для анимации (включая исчезающие)
-    const allNodesForAnimation = [...targetNodes, ...disappearingNodes];
+    const allNodesForAnimation: Node[] = [];
+    // добавляем все видимые узлы
+    for (let i = 0; i < targetNodes.length; i++) {
+      allNodesForAnimation.push(targetNodes[i]);
+    }
+    // добавляем исчезающие узлы
+    for (let i = 0; i < disappearingNodes.length; i++) {
+      allNodesForAnimation.push(disappearingNodes[i]);
+    }
 
     // Создаем переходы
-    const transitions = [
-      ...appearingNodes.map((node) => {
-        const parentId = parentMap.get(node.id);
-        const parentNode = parentId ? getNode(parentId) || targetNodes.find((n) => n.id === parentId) : null;
-        const fromPosition = parentNode ? parentNode.position : node.position;
-
-        return {
-          id: node.id,
-          from: fromPosition,
-          to: node.position,
-          node: { ...node, style: { ...node.style, opacity: 0 } },
-          type: "appearing" as const,
-        };
-      }),
-
-      ...stayingNodes.map((node) => ({
-        id: node.id,
-        from: getNode(node.id)?.position ?? node.position,
-        to: node.position,
-        node,
-        type: "staying" as const,
-      })),
-
-      ...disappearingNodes.map((node) => {
-        const parentId = parentMap.get(node.id);
-        const parentNode = parentId ? getNode(parentId) || targetNodes.find((n) => n.id === parentId) : null;
-        const toPosition = parentNode ? parentNode.position : node.position;
-
-        return {
-          id: node.id,
-          from: getNode(node.id)?.position ?? node.position,
-          to: toPosition,
-          node: { ...node, style: { ...node.style, opacity: 1 } },
-          type: "disappearing" as const,
-        };
-      }),
-    ];
-
-    animateWithDisappearing(transitions, targetNodes, allNodesForAnimation);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-      previousTargetNodesRef.current = targetNodes;
-  }, [targetNodes, targetEdges, getNode]);
-
-  // Функция анимации позиций (без появления/исчезновения)
-  const animatePositions = (nodesToAnimate: Node[], finalNodes: Node[], finalEdges: Edge[]) => {
-    const transitions = nodesToAnimate.map((node) => ({
-      id: node.id,
-      from: getNode(node.id)?.position ?? node.position,
-      to: node.position,
-      node,
-    }));
-
-    const duration = 300;
-    const startTime = Date.now();
-
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-
-      const currNodes = transitions.map(({ node, from, to }) => ({
-        ...node,
-        position: {
-          x: from.x + (to.x - from.x) * easeOut,
-          y: from.y + (to.y - from.y) * easeOut,
-        },
-      }));
-
-      // Оптимизированная фильтрация edges для больших наборов данных
-      const currNodeIds = new Set(currNodes.map((n) => n.id));
-      const animatedEdges = finalEdges.filter((edge) => currNodeIds.has(edge.source) && currNodeIds.has(edge.target));
-
-      setAnimatedNodes(currNodes);
-      setAnimatedEdges(animatedEdges);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        setAnimatedNodes(finalNodes);
-        setAnimatedEdges(targetEdges);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  };
-
-  // Функция анимации с исчезающими узлами
-  const animateWithDisappearing = (
-    transitions: Array<{
+    const transitions: Array<{
       id: string;
       from: { x: number; y: number };
       to: { x: number; y: number };
       node: Node;
       type: "appearing" | "staying" | "disappearing";
-    }>,
-    finalNodes: Node[],
-    allNodes: Node[]
-  ) => {
-    // Устанавливаем рёбра для всех узлов (включая исчезающие) - используем targetEdges
-    const allNodeIds = new Set(allNodes.map((n) => n.id));
-    const initialAnimationEdges = targetEdges.filter(
-      (edge) => allNodeIds.has(edge.source) && allNodeIds.has(edge.target)
-    );
-    setAnimatedEdges(initialAnimationEdges);
+    }> = [];
 
-    const duration = 400;
-    const startTime = Date.now();
+    // Переходы для появляющихся узлов
+    for (let i = 0; i < appearingNodes.length; i++) {
+      const node = appearingNodes[i];
+      const parentId = parentMap.get(node.id);
+      const parentNode = parentId
+          ? getNode(parentId) || targetNodes.find((n) => n.id === parentId)
+          : null;
+      const fromPosition = parentNode ? parentNode.position : node.position;
+      transitions.push({
+        id: node.id,
+        from: fromPosition,
+        to: node.position,
+        node: { ...node, style: { ...node.style, opacity: 0 } },
+        type: "appearing",
+      });
+    }
 
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
+    // Переходы для остающихся узлов
+    for (let i = 0; i < stayingNodes.length; i++) {
+      const node = stayingNodes[i];
+      transitions.push({
+        id: node.id,
+        from: getNode(node.id)?.position ?? node.position,
+        to: node.position,
+        node,
+        type: "staying",
+      });
+    }
 
-      const currNodes = transitions.map(({ node, from, to, type }) => {
-        const animatedPosition = {
-          x: from.x + (to.x - from.x) * easeOut,
-          y: from.y + (to.y - from.y) * easeOut,
-        };
+    // Переходы для исчезающих узлов
+    for (let i = 0; i < disappearingNodes.length; i++) {
+      const node = disappearingNodes[i];
+      const parentId = parentMap.get(node.id);
+      const parentNode = parentId
+          ? getNode(parentId) || targetNodes.find((n) => n.id === parentId)
+          : null;
+      const toPosition = parentNode ? parentNode.position : node.position;
+      transitions.push({
+        id: node.id,
+        from: getNode(node.id)?.position ?? node.position,
+        to: toPosition,
+        node: { ...node, style: { ...node.style, opacity: 1 } },
+        type: "disappearing",
+      });
+    }
 
-        let opacity = 1;
-        if (type === "appearing") {
-          opacity = easeOut;
-        } else if (type === "disappearing") {
-          opacity = 1 - easeOut;
+    animateWithDisappearing(transitions, targetNodes, allNodesForAnimation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    previousTargetNodesRef.current = targetNodes;
+  }, [targetNodes, targetEdges, getNode]);
+
+  // Функция анимации позиций (без появления/исчезновения)
+  const animatePositions = useCallback(
+      (nodesToAnimate: Node[], finalNodes: Node[], finalEdges: Edge[]) => {
+        const transitions: Array<{
+          id: string;
+          from: { x: number; y: number };
+          to: { x: number; y: number };
+          node: Node;
+        }> = [];
+        for (let i = 0; i < nodesToAnimate.length; i++) {
+          const node = nodesToAnimate[i];
+          transitions.push({
+            id: node.id,
+            from: getNode(node.id)?.position ?? node.position,
+            to: node.position,
+            node,
+          });
         }
 
-        return {
-          ...node,
-          position: animatedPosition,
-          style: {
-            ...node.style,
-            opacity,
-          },
+        const duration = 300;
+        const startTime = Date.now();
+
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+
+          const currNodes: Node[] = [];
+          for (let i = 0; i < transitions.length; i++) {
+            const { node, from, to } = transitions[i];
+            currNodes.push({
+              ...node,
+              position: {
+                x: from.x + (to.x - from.x) * easeOut,
+                y: from.y + (to.y - from.y) * easeOut,
+              },
+            });
+          }
+
+          const currNodeIds = new Set<string>();
+          for (let i = 0; i < currNodes.length; i++) {
+            currNodeIds.add(currNodes[i].id);
+          }
+
+          const animatedEdges: Edge[] = [];
+          for (let i = 0; i < finalEdges.length; i++) {
+            const edge = finalEdges[i];
+            if (currNodeIds.has(edge.source) && currNodeIds.has(edge.target)) {
+              animatedEdges.push(edge);
+            }
+          }
+
+          setAnimatedNodes(currNodes);
+          setAnimatedEdges(animatedEdges);
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            setAnimatedNodes(finalNodes);
+            setAnimatedEdges(targetEdges);
+          }
         };
-      });
 
-      // Оптимизированная фильтрация edges для анимации - используем targetEdges
-      const currNodeIds = new Set(currNodes.map((n) => n.id));
-      const animatedEdges = targetEdges.filter((edge) => currNodeIds.has(edge.source) && currNodeIds.has(edge.target));
-
-      setAnimatedNodes(currNodes);
-      setAnimatedEdges(animatedEdges);
-
-      if (progress < 1) {
         requestAnimationFrame(animate);
-      } else {
-        // Финальное состояние - только целевые узлы
-        setAnimatedNodes(
-          finalNodes.map((node) => ({
-            ...node,
-            style: { ...node.style, opacity: 1 },
-          }))
-        );
-        setAnimatedEdges(targetEdges);
-      }
-    };
+      },
+      [getNode, setAnimatedNodes, setAnimatedEdges, targetEdges]
+  );
 
-    requestAnimationFrame(animate);
-  };
+  // Функция анимации с исчезающими узлами
+  const animateWithDisappearing = useCallback(
+      (
+          transitions: Array<{
+            id: string;
+            from: { x: number; y: number };
+            to: { x: number; y: number };
+            node: Node;
+            type: "appearing" | "staying" | "disappearing";
+          }>,
+          finalNodes: Node[],
+          allNodes: Node[]
+      ) => {
+        // Устанавливаем рёбра для всех узлов (включая исчезающие) - используем targetEdges
+        const allNodeIds = new Set<string>();
+        for (let i = 0; i < allNodes.length; i++) {
+          allNodeIds.add(allNodes[i].id);
+        }
+        const initialAnimationEdges: Edge[] = [];
+        for (let i = 0; i < targetEdges.length; i++) {
+          const edge = targetEdges[i];
+          if (allNodeIds.has(edge.source) && allNodeIds.has(edge.target)) {
+            initialAnimationEdges.push(edge);
+          }
+        }
+        setAnimatedEdges(initialAnimationEdges);
+
+        const duration = 400;
+        const startTime = Date.now();
+
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+
+          const currNodes: Node[] = [];
+          for (let i = 0; i < transitions.length; i++) {
+            const { node, from, to, type } = transitions[i];
+            const animatedPosition = {
+              x: from.x + (to.x - from.x) * easeOut,
+              y: from.y + (to.y - from.y) * easeOut,
+            };
+            let opacity = 1;
+            if (type === "appearing") {
+              opacity = easeOut;
+            } else if (type === "disappearing") {
+              opacity = 1 - easeOut;
+            }
+            currNodes.push({
+              ...node,
+              position: animatedPosition,
+              style: {
+                ...node.style,
+                opacity,
+              },
+            });
+          }
+
+          const currNodeIds = new Set<string>();
+          for (let i = 0; i < currNodes.length; i++) {
+            currNodeIds.add(currNodes[i].id);
+          }
+          const animatedEdges: Edge[] = [];
+          for (let i = 0; i < targetEdges.length; i++) {
+            const edge = targetEdges[i];
+            if (currNodeIds.has(edge.source) && currNodeIds.has(edge.target)) {
+              animatedEdges.push(edge);
+            }
+          }
+
+          setAnimatedNodes(currNodes);
+          setAnimatedEdges(animatedEdges);
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Финальное состояние - только целевые узлы
+            const finalStyledNodes: Node[] = [];
+            for (let i = 0; i < finalNodes.length; i++) {
+              const node = finalNodes[i];
+              finalStyledNodes.push({
+                ...node,
+                style: { ...node.style, opacity: 1 },
+              });
+            }
+            setAnimatedNodes(finalStyledNodes);
+            setAnimatedEdges(targetEdges);
+          }
+        };
+
+        requestAnimationFrame(animate);
+      },
+      [setAnimatedEdges, setAnimatedNodes, targetEdges]
+  );
 
   // Мемоизация для больших наборов данных с проверкой целостности
   const finalNodes = animatedNodes.length > 0 ? animatedNodes : targetNodes;
   let finalEdges = animatedEdges.length > 0 ? animatedEdges : targetEdges;
 
-  // Дополнительная проверка: если у нас есть nodes но нет edges, используем targetEdges
+  // Дополнительная проверка: если у нас есть nodes, но нет edges, используем targetEdges
   if (finalNodes.length > 0 && finalEdges.length === 0 && targetEdges.length > 0) {
     finalEdges = targetEdges;
   }

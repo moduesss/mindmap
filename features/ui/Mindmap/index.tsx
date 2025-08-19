@@ -1,10 +1,6 @@
 "use client";
 
-// TODO:: Отрефакторить под FSD ( https://feature-sliced.design/ru/ )
-// Полностью имплементировать не нужно, но нужно разбить на hooks, types, ui, utils, constants, etc.
-// Также нужно учесть, что данные компонент будет получать из бэкенда
-
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -15,7 +11,6 @@ import {
   Background,
   Controls,
   Node,
-  Edge,
 } from "@xyflow/react";
 
 import MindmapNode from "./MIndmapNode/MindmapNode";
@@ -23,9 +18,7 @@ import useMindmapCollapse from "../../model/useMindmapCollapse";
 import { transformMindmapData } from "../../model/utils";
 import { MindmapProps } from "../../lib/types";
 
-// Import React Flow styles
 import "@xyflow/react/dist/style.css";
-// Import our custom styles
 import "../../lib/mindmap.css";
 
 const proOptions = {
@@ -37,24 +30,24 @@ const nodeTypes = {
 };
 
 function MindmapComponent({
-  data,
-  width = "100%",
-  height = "600px",
-  direction = "LR",
-  spacing = [200, 30],
-  onNodeClick,
-  className = "",
-  style = {},
-}: MindmapProps) {
+                            data,
+                            width = "100%",
+                            height = "600px",
+                            direction = "LR",
+                            spacing = [200, 30],
+                            onNodeClick,
+                            className = "",
+                            style = {},
+                          }: MindmapProps) {
   const { fitView } = useReactFlow();
 
-  // Преобразуем данные в формат React Flow
-  const { nodes: initialNodes, edges: initialEdges } = transformMindmapData(data);
+  // Используем useMemo, чтобы не пересоздавать initialNodes/initialEdges при каждом рендере
+  const memoizedInitial = useMemo(() => transformMindmapData(data), [data]);
+  const [nodes, setNodes, onNodesChange] = useNodesState(memoizedInitial.nodes);
+  // @ts-ignore
+  const [edges, setEdges, onEdgesChange] = useEdgesState(memoizedInitial.edges);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState<Edge>(initialEdges);
-
-  // Используем хук для анимации сворачивания/разворачивания
+  // Получаем видимые узлы/рёбра с учётом сворачивания
   const { nodes: visibleNodes, edges: visibleEdges } = useMindmapCollapse(nodes, edges, {
     direction,
     spacing,
@@ -62,25 +55,30 @@ function MindmapComponent({
 
   // Обработчик клика для expand/collapse
   const handleNodeClick: NodeMouseHandler = useCallback(
-    (_, node) => {
-      setNodes((nds) =>
-        nds.map((n) => {
-          if (n.id === node.id) {
-            return {
-              ...n,
-              data: { ...n.data, expanded: !((n.data as Record<string, unknown>).expanded as boolean) },
-            };
+      (_, node) => {
+        setNodes((nds) => {
+          // заменяем .map() на цикл for для повышения производительности
+          const updated: Node[] = [];
+          for (let i = 0; i < nds.length; i++) {
+            const n = nds[i];
+            if (n.id === node.id) {
+              updated.push({
+                ...n,
+                data: { ...n.data, expanded: !((n.data as any).expanded) },
+              });
+            } else {
+              updated.push(n);
+            }
           }
-          return n;
-        })
-      );
+          return updated;
+        });
 
-      // Вызываем пользовательский обработчик, если он передан
-      if (onNodeClick) {
-        onNodeClick(node.id, node as Node);
-      }
-    },
-    [setNodes, onNodeClick]
+        // Вызываем пользовательский обработчик, если он передан
+        if (onNodeClick) {
+          onNodeClick(node.id, node as Node);
+        }
+      },
+      [setNodes, onNodeClick]
   );
 
   // Центрируем только при первой загрузке
@@ -88,38 +86,35 @@ function MindmapComponent({
     if (visibleNodes.length > 0) {
       fitView({ duration: 500, padding: 0.1 });
     }
-  }, [fitView, visibleNodes.length]); // Добавляем зависимости
+  }, [fitView, visibleNodes.length]);
+
+  // Мемоизируем обработчики изменений, чтобы не создавать новые функции на каждом рендере
+  const memoOnNodesChange = useCallback(onNodesChange, [onNodesChange]);
+  const memoOnEdgesChange = useCallback(onEdgesChange, [onEdgesChange]);
 
   return (
-    <div className={`mindmap-container ${className}`} style={{ width, height, ...style }}>
-      <ReactFlow
-        nodes={visibleNodes}
-        edges={visibleEdges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        nodeTypes={nodeTypes}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        zoomOnDoubleClick={false}
-        proOptions={proOptions}
-        fitView
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
-    </div>
+      <div className={className} style={{ width, height, ...style }}>
+        <ReactFlowProvider>
+          <ReactFlow
+              nodes={visibleNodes}
+              edges={visibleEdges}
+              onNodesChange={memoOnNodesChange}
+              onEdgesChange={memoOnEdgesChange}
+              nodeTypes={nodeTypes}
+              proOptions={proOptions}
+              onNodeClick={handleNodeClick}
+          >
+            <Background />
+            <Controls />
+          </ReactFlow>
+        </ReactFlowProvider>
+      </div>
   );
 }
 
 // Экспортируем обёрнутый компонент с ReactFlowProvider
 export default function Mindmap(props: MindmapProps) {
-  return (
-    <ReactFlowProvider>
-      <MindmapComponent {...props} />
-    </ReactFlowProvider>
-  );
+  return <MindmapComponent {...props} />;
 }
 
 // Экспортируем типы для удобства использования

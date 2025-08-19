@@ -1,9 +1,10 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useReactFlow, useStore, Node, Edge, ReactFlowState } from "@xyflow/react";
 import { timer } from "d3-timer";
-import useMindmapCollapse from "../../src/useMindmapCollapse";
+import useMindmapCollapse from "./useMindmapCollapse";
 
-const options = { duration: 400 };
+// Опции анимации
+const options = { duration: 600 };
 
 // Селектор для отслеживания изменений
 const stateSelector = (state: ReactFlowState) => ({
@@ -12,9 +13,9 @@ const stateSelector = (state: ReactFlowState) => ({
 });
 
 function useAnimatedMindmap(
-  nodes: Node[],
-  edges: Edge[],
-  collapseOptions: { direction?: "TB" | "LR" | "BT" | "RL"; spacing?: [number, number] } = {}
+    nodes: Node[],
+    edges: Edge[],
+    collapseOptions: { direction?: "TB" | "LR" | "BT" | "RL"; spacing?: [number, number] } = {}
 ) {
   const initial = useRef(true);
   const { getNode, setNodes, fitView } = useReactFlow();
@@ -27,46 +28,59 @@ function useAnimatedMindmap(
 
   // Функция анимации
   const animateToPositions = useCallback(
-    (targetNodes: Node[]) => {
-      const transitions = targetNodes.map((node) => ({
-        id: node.id,
-        from: getNode(node.id)?.position || node.position,
-        to: node.position,
-        node,
-      }));
-
-      const t = timer((elapsed: number) => {
-        const s = Math.min(elapsed / options.duration, 1);
-
-        // Используем ease-out функцию для более плавной анимации
-        const easeOut = 1 - Math.pow(1 - s, 3);
-
-        const currNodes = transitions.map(({ node, from, to }) => ({
-          ...node,
-          position: {
-            x: from.x + (to.x - from.x) * easeOut,
-            y: from.y + (to.y - from.y) * easeOut,
-          },
-        }));
-
-        setNodes(currNodes);
-
-        if (elapsed >= options.duration) {
-          // Финальная установка позиций
-          setNodes(targetNodes);
-          t.stop();
-
-          // Центрируем view после анимации
-          if (!initial.current) {
-            fitView({ duration: 300, padding: 0.1 });
-          }
-          initial.current = false;
+      (targetNodes: Node[]) => {
+        const transitions: Array<{
+          id: string;
+          from: { x: number; y: number };
+          to: { x: number; y: number };
+          node: Node;
+        }> = [];
+        for (let i = 0; i < targetNodes.length; i++) {
+          const node = targetNodes[i];
+          transitions.push({
+            id: node.id,
+            from: getNode(node.id)?.position || node.position,
+            to: node.position,
+            node,
+          });
         }
-      });
 
-      return () => t.stop();
-    },
-    [getNode, setNodes, fitView]
+        const t = timer((elapsed: number) => {
+          const s = Math.min(elapsed / options.duration, 1);
+
+          // Используем ease-out функцию для более плавной анимации
+          const easeOut = 1 - Math.pow(1 - s, 3);
+
+          const currNodes: Node[] = [];
+          for (let i = 0; i < transitions.length; i++) {
+            const { node, from, to } = transitions[i];
+            currNodes.push({
+              ...node,
+              position: {
+                x: from.x + (to.x - from.x) * easeOut,
+                y: from.y + (to.y - from.y) * easeOut,
+              },
+            });
+          }
+
+          setNodes(currNodes);
+
+          if (elapsed >= options.duration) {
+            // Финальная установка позиций
+            setNodes(targetNodes);
+            t.stop();
+
+            // Центрируем view после анимации
+            if (!initial.current) {
+              fitView({ duration: 300, padding: 0.1 });
+            }
+            initial.current = false;
+          }
+        });
+
+        return () => t.stop();
+      },
+      [getNode, setNodes, fitView]
   );
 
   // Запускаем анимацию при изменении nodes
