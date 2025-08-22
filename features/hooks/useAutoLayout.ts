@@ -7,8 +7,8 @@ import {
   useStore,
 } from '@xyflow/react';
 
-import { getSourceHandlePosition, getTargetHandlePosition } from './utils';
-import layoutAlgorithms, { type LayoutAlgorithmOptions } from '../../shared/algorithms';
+import { getSourceHandlePosition, getTargetHandlePosition } from '../utils/utils';
+import layoutAlgorithms, { type LayoutAlgorithmOptions } from '../utils/algorithms';
 
 export type LayoutOptions = {
   algorithm: keyof typeof layoutAlgorithms;

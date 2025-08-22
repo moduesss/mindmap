@@ -11,7 +11,7 @@ import {
 } from "@xyflow/react";
 
 import MindmapNode from "./index/MindmapNode";
-import useMindmapCollapse from "../features/model/useMindmapCollapse";
+import useMindmapCollapse from "../features/hooks/useMindmapCollapse";
 import { nodes as initialNodes, edges as initialEdges } from "./index/initialElements";
 
 import "@xyflow/react/dist/style.css";

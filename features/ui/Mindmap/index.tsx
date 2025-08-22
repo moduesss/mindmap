@@ -14,12 +14,12 @@ import {
 } from "@xyflow/react";
 
 import MindmapNode from "./MIndmapNode/MindmapNode";
-import useMindmapCollapse from "../../model/useMindmapCollapse";
-import { transformMindmapData } from "../../model/utils";
-import { MindmapProps } from "../../lib/types";
+import useMindmapCollapse from "../../hooks/useMindmapCollapse";
+import { transformMindmapData } from "../../utils/utils";
+import { MindmapProps } from "../../utils/types";
 
 import "@xyflow/react/dist/style.css";
-import "../../lib/mindmap.css";
+import "../../utils/mindmap.css";
 
 const proOptions = {
   hideAttribution: true,
@@ -118,4 +118,4 @@ export default function Mindmap(props: MindmapProps) {
 }
 
 // Экспортируем типы для удобства использования
-export type { MindmapProps, MindmapData, MindmapNodeData } from "../../lib/types";
+export type { MindmapProps, MindmapData, MindmapNodeData } from "../../utils/types";

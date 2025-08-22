@@ -1,5 +1,5 @@
 import { Position, Node, Edge } from "@xyflow/react";
-import { Direction, ColorScheme, MindmapData } from "../lib/types";
+import { Direction, ColorScheme, MindmapData } from "./types";
 
 export function getSourceHandlePosition(direction: Direction): Position {
   switch (direction) {

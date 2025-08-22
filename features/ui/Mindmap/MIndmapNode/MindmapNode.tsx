@@ -4,8 +4,8 @@ import {
     getLevelColor,
     getSourceHandlePosition,
     getTargetHandlePosition,
-} from "../../../model/utils";
-import { MindmapNodeData } from "../../../lib/types";
+} from "../../../utils/utils";
+import { MindmapNodeData } from "../../../utils/types";
 
 const MindmapNode = memo(({ data }: NodeProps) => {
     const { label, expanded, expandable, level = 0, direction = "LR" } = data as MindmapNodeData;

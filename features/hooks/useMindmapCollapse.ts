@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useState, useRef, useCallback } from "react";
 import { useReactFlow, Node, Edge } from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
-import { UseMindmapCollapseOptions } from "../lib/types";
+import { UseMindmapCollapseOptions } from "../utils/types";
 
 interface CollapseNodeData {
   expandable?: boolean;
